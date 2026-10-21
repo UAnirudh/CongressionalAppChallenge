@@ -10,6 +10,71 @@ const complete = (value: unknown) =>
       choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(value) } }],
     }),
   );
+it.each(['openai/gpt-oss-20b', 'openai/gpt-oss-120b'])(
+  'uses NVIDIA request semantics for %s and validates final content only',
+  async (model) => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              finish_reason: 'stop',
+              message: {
+                reasoning_content: 'untrusted reasoning, not a model',
+                content:
+                  '```json\n' +
+                  JSON.stringify({ status: 'supported', problem: samples[1] }) +
+                  '\n```',
+              },
+            },
+          ],
+        }),
+      ),
+    );
+    expect(
+      await interpret(
+        { text: 'y=2x+1' },
+        { provider: 'nvidia', key: 'nvidia-test', model },
+        fetcher,
+      ),
+    ).toEqual({ status: 'supported', problem: samples[1] });
+    expect(fetcher.mock.calls[0][0]).toBe('https://integrate.api.nvidia.com/v1/chat/completions');
+    const sent = JSON.parse(String(fetcher.mock.calls[0][1]?.body));
+    expect(sent).toMatchObject({ model, max_tokens: 4096, reasoning_effort: 'low', stream: false });
+    expect(sent.messages[1]).toEqual({ role: 'user', content: 'y=2x+1' });
+    expect(sent).not.toHaveProperty('store');
+    expect(sent).not.toHaveProperty('max_completion_tokens');
+    expect(sent).not.toHaveProperty('response_format');
+  },
+);
+
+it('rejects images for GPT-OSS before sending any data', async () => {
+  const fetcher = vi.fn<typeof fetch>();
+  await expect(
+    interpret(
+      { text: '', image: { mime: 'image/png', bytes: new Uint8Array([1]) } },
+      { provider: 'nvidia', key: 'test', model: 'openai/gpt-oss-20b' },
+      fetcher,
+    ),
+  ).rejects.toThrow('supports text only');
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it('handles NVIDIA credentials and quota failures without leaking provider response bodies', async () => {
+  for (const status of [401, 403, 429]) {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response('sensitive provider details', { status }));
+    await expect(
+      interpret(
+        { text: 'y=2x+1' },
+        { provider: 'nvidia', key: 'secret', model: 'openai/gpt-oss-20b' },
+        fetcher,
+      ),
+    ).rejects.toThrow(status === 429 ? 'usage limit' : 'credentials');
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  }
+});
 it('validates provider models and keeps credentials in the outgoing server request', async () => {
   const fetcher = vi
     .fn<typeof fetch>()

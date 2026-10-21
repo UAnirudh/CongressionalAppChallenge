@@ -1,6 +1,7 @@
 import { interpretationSchema } from './models';
 import { MAX_IMAGE_BYTES, MAX_REQUEST_BYTES } from './upload';
 import sharp from 'sharp';
+import type { ProviderConfig } from './provider';
 
 export class InterpretationError extends Error {
   constructor(
@@ -85,9 +86,15 @@ Support exactly projectile_motion and linear_function. Projectile limits: speed 
 
 export async function interpret(
   input: { text: string; image?: { mime: string; bytes: Uint8Array } },
-  config: { key: string; model: string },
+  config: ProviderConfig,
   fetcher: typeof fetch = fetch,
 ) {
+  const nvidia = config.provider === 'nvidia';
+  if (nvidia && input.image)
+    throw new InterpretationError(
+      'GPT-OSS on NVIDIA supports text only. Paste or type the problem instead of uploading an image.',
+      422,
+    );
   const content: Array<Record<string, unknown>> = [
     { type: 'text', text: input.text || 'Extract the problem from this image.' },
   ];
@@ -100,27 +107,47 @@ export async function interpret(
     });
   let response: Response;
   try {
-    response = await fetcher('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: config.model,
-        store: false,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: instructions },
-          { role: 'user', content },
-        ],
-        max_completion_tokens: 1600,
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
+    response = await fetcher(
+      nvidia
+        ? 'https://integrate.api.nvidia.com/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: config.model,
+          ...(nvidia
+            ? { max_tokens: 4096, reasoning_effort: 'low', stream: false }
+            : {
+                store: false,
+                response_format: { type: 'json_object' },
+                max_completion_tokens: 1600,
+              }),
+          messages: [
+            { role: 'system', content: instructions },
+            { role: 'user', content: nvidia ? input.text : content },
+          ],
+        }),
+        signal: AbortSignal.timeout(nvidia ? 45000 : 25000),
+        cache: 'no-store',
+      },
+    );
   } catch {
     throw new InterpretationError(
       'The interpretation service could not be reached. Try again or use a sample.',
       502,
     );
   }
+  if (response.status === 401 || response.status === 403)
+    throw new InterpretationError(
+      'The AI provider rejected this server’s credentials. Check the provider key and model access in hosting settings.',
+      502,
+    );
+  if (response.status === 429)
+    throw new InterpretationError(
+      'The AI provider is at its usage limit. Try again shortly or use a sample.',
+      503,
+    );
   if (!response.ok)
     throw new InterpretationError(
       'The interpretation service is unavailable. Try again or use a sample.',
@@ -129,7 +156,11 @@ export async function interpret(
   try {
     const data = await response.json();
     if (data.choices?.[0]?.finish_reason !== 'stop') throw new Error('Incomplete interpretation');
-    return interpretationSchema.parse(JSON.parse(data.choices[0].message.content));
+    // GPT-OSS reasoning is separate from final content. Never parse or return reasoning_content.
+    const text = data.choices[0].message.content;
+    if (typeof text !== 'string') throw new Error('Missing final answer');
+    const json = text.trim().replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i, '$1');
+    return interpretationSchema.parse(JSON.parse(json));
   } catch {
     throw new InterpretationError(
       'The service returned an invalid or incomplete model. Rephrase the problem or use a clearer image.',

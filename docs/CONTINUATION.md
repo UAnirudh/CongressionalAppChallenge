@@ -1,5 +1,7 @@
 # ConceptLens continuation prompt
 
+> Historical handoff from October 16. The current provider setup is in `README.md` and `docs/NVIDIA.md`; the Vercel project now holds NVIDIA credentials. The UI refresh and its verification are documented in `docs/UI_REFRESH.md`. Treat the older provider-only setup and delivery status below as historical context.
+
 Copy the following prompt into your next coding assistant and give it this repository. No Codex-specific tool is required to continue.
 
 ---
