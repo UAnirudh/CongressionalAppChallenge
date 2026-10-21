@@ -21,7 +21,7 @@ The platform now uses a shared ivory and forest-green workspace, Geist typograph
 ## Verification
 
 - Production build and its TypeScript validation: passed.
-- Unit/API tests: 29 passed, including NVIDIA request and configuration coverage.
+- Unit/API tests: 30 passed, including NVIDIA request and configuration coverage.
 - Playwright: 24 checks passed across desktop Chrome and emulated iPhone 13, including the NVIDIA text-only configuration. The multi-view desktop accessibility audit was rerun successfully with a 60-second budget for its four axe scans.
 - Automated WCAG A/AA checks: passed on the lab, review, both simulators, exercise library, and guide.
 - Visual/browser checks at 320, 390, 768, and 1440 pixels: no horizontal overflow or observed page errors.

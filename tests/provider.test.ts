@@ -47,3 +47,13 @@ it('publishes only accurate provider capabilities, never credentials', () => {
   expect(providerInfo({ AI_PROVIDER: 'openai' })).toEqual({ name: 'OpenAI', supportsImages: true });
   expect(providerInfo({ AI_PROVIDER: 'unknown' }).supportsImages).toBe(false);
 });
+
+it('keeps NVIDIA selected when its model is configured but its key is missing', () => {
+  const env = {
+    NVIDIA_MODEL: 'openai/gpt-oss-20b',
+    OPENAI_API_KEY: 'do-not-use',
+    OPENAI_MODEL: 'other-model',
+  };
+  expect(providerInfo(env)).toEqual({ name: 'NVIDIA', supportsImages: false });
+  expect(() => providerConfig(env)).toThrow('NVIDIA interpretation is not configured');
+});

@@ -9,7 +9,7 @@ export function selectedProvider(env: ProviderEnvironment = process.env): AIProv
       throw new Error('AI_PROVIDER must be openai or nvidia.');
     return env.AI_PROVIDER;
   }
-  return env.NVIDIA_API_KEY ? 'nvidia' : 'openai';
+  return env.NVIDIA_API_KEY || env.NVIDIA_MODEL ? 'nvidia' : 'openai';
 }
 
 // Only this public description crosses the server/client boundary. Never pass the config.

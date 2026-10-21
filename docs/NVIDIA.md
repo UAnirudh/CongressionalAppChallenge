@@ -4,7 +4,7 @@
 
 The existing Vercel project has `NVIDIA_API_KEY` and `NVIDIA_MODEL` in preview and production. Keep the key in Vercel. No key is embedded in source, browser props, or build assets.
 
-`AI_PROVIDER=nvidia` explicitly selects NVIDIA. Without an explicit provider, the presence of `NVIDIA_API_KEY` selects NVIDIA; otherwise the original OpenAI path remains available. Selecting NVIDIA never borrows an OpenAI key or falls back to another provider on failure.
+`AI_PROVIDER=nvidia` explicitly selects NVIDIA. Without an explicit provider, the presence of either `NVIDIA_API_KEY` or `NVIDIA_MODEL` selects NVIDIA; otherwise the original OpenAI path remains available. A missing NVIDIA key remains a configuration error even when OpenAI credentials exist. Selecting NVIDIA never borrows an OpenAI key or falls back to another provider on failure.
 
 Use the exact `NVIDIA_MODEL` enabled on the account: `openai/gpt-oss-20b` or `openai/gpt-oss-120b`. The application passes the selected model through unchanged. Availability depends on NVIDIA and the account; it does not silently switch model sizes.
 
