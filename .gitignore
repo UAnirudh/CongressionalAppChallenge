@@ -6,3 +6,5 @@ node_modules.install-backup/
 playwright-report/
 test-results/
 *.tsbuildinfo
+
+.vercel

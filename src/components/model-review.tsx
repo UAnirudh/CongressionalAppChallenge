@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { problemSchema, type Problem } from '@/lib/models';
 import { Button } from './ui/button';
+import { Icon } from './icon';
 
 export function ModelReview({
   problem,
@@ -13,6 +14,7 @@ export function ModelReview({
   const [error, setError] = useState('');
   return (
     <section className="panel" aria-labelledby="review-heading">
+      <span className="eyebrow review-eyebrow">02 / MAKE IT YOURS</span>
       <h2 id="review-heading" tabIndex={-1}>
         Check your model
       </h2>
@@ -123,7 +125,16 @@ export function ModelReview({
             {error}
           </p>
         )}
-        <Button type="submit">Confirm and explore</Button>
+        <div className="review-footer">
+          <span className="note">
+            <Icon name="check" />
+            You’re in control of the model.
+          </span>
+          <Button type="submit">
+            Confirm and explore
+            <Icon name="arrow" />
+          </Button>
+        </div>
       </form>
     </section>
   );

@@ -3,11 +3,15 @@ import { useState } from 'react';
 import { checkPrediction, prediction } from '@/lib/math';
 import type { Problem } from '@/lib/models';
 import { Button } from './ui/button';
+import { Icon } from './icon';
 export function Prediction({ model, onReveal }: { model: Problem; onReveal: () => void }) {
   const [feedback, setFeedback] = useState('');
   const challenge = prediction(model);
   return (
     <section className="prediction" aria-labelledby="prediction-heading">
+      <span className="eyebrow">
+        <Icon name="target" />A MOMENT TO THINK
+      </span>
       <h3 id="prediction-heading">Think before you reveal</h3>
       <p>{challenge.question}</p>
       <form
@@ -27,7 +31,10 @@ export function Prediction({ model, onReveal }: { model: Problem; onReveal: () =
           Your prediction ({challenge.unit})
           <input name="answer" type="number" step="any" required />
         </label>
-        <Button type="submit">Check prediction</Button>
+        <Button type="submit">
+          Check prediction
+          <Icon name="arrow" />
+        </Button>
       </form>
       <p className="note">Answers within 1% or 0.01 of the calculated value are accepted.</p>
       <p role="status">{feedback}</p>

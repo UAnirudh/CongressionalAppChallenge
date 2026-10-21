@@ -34,3 +34,7 @@ Deploy only after hosting request/concurrency limits and provider spending limit
 ## Human accessibility check
 
 Use keyboard-only navigation and an actual screen reader on the target browser. Check focus after selecting a sample and confirming a review, slider operation, errors, consent, prediction feedback, and return to model review. The automated axe scans and mobile Chromium emulation are useful evidence but do not certify screen-reader or physical-device compatibility.
+
+# NVIDIA configuration
+
+For `AI_PROVIDER=nvidia` (or the existing Vercel NVIDIA key/model pair), run the synthetic text cases below. GPT-OSS is text-only: image upload must be disabled in the UI, and a direct image request must return 422 without contacting NVIDIA. The image interpretation cases apply only to an explicitly configured image-capable OpenAI provider. See `docs/NVIDIA.md`.

@@ -4,18 +4,15 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 // Local shadcn/ui-style primitive: students own and can edit its styling.
-const buttonVariants = cva(
-  'inline-flex min-h-11 items-center justify-center rounded-lg px-5 py-2 text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50',
-  {
-    variants: {
-      variant: {
-        default: 'bg-blue-700 text-white hover:bg-blue-800',
-        outline: 'border border-blue-300 bg-white text-blue-900 hover:bg-blue-50',
-      },
+const buttonVariants = cva('button', {
+  variants: {
+    variant: {
+      default: 'button-primary',
+      outline: 'button-outline',
     },
-    defaultVariants: { variant: 'default' },
   },
-);
+  defaultVariants: { variant: 'default' },
+});
 export function Button({
   className,
   variant,

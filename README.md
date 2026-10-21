@@ -11,7 +11,9 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. Both sample exercises work without credentials. For AI interpretation, copy `.env.example` to `.env.local`, set `OPENAI_API_KEY` and `OPENAI_MODEL`, then restart. Choose an OpenAI model that supports image input and JSON mode. Never prefix the key with `NEXT_PUBLIC_`.
+Open http://localhost:3000. Both sample exercises work without credentials. For AI interpretation, copy `.env.example` to `.env.local`, set `AI_PROVIDER=nvidia`, `NVIDIA_API_KEY`, and `NVIDIA_MODEL`, then restart. Use the exact NVIDIA model ID enabled on your account: `openai/gpt-oss-20b` or `openai/gpt-oss-120b`. Keys stay server-side; never prefix them with `NEXT_PUBLIC_`. Existing Vercel settings with `NVIDIA_API_KEY` and `NVIDIA_MODEL` work without adding `AI_PROVIDER`.
+
+GPT-OSS is text-only: type or paste a problem. The UI disables image upload and names NVIDIA in the disclosure. For image interpretation, explicitly select `AI_PROVIDER=openai` and configure `OPENAI_API_KEY` and a compatible `OPENAI_MODEL`. There is no automatic fallback to a different provider or model. NVIDIA documents its [GPT-OSS API and text-only capabilities](https://docs.api.nvidia.com/nim/reference/openai-gpt-oss-20b). See [the provider architecture](docs/NVIDIA.md).
 
 If this Windows shell cannot find `taskkill.exe`, add the system tools directory for the current terminal before browser tests: `$env:Path = "$env:SystemRoot\System32;" + $env:Path`. Playwright needs it to stop its test server. Alternatively, run `npm start` in another terminal and let the tests reuse it.
 
@@ -43,13 +45,13 @@ Prediction checking accepts an absolute error of `max(0.01, |answer| × 0.01)`. 
 
 ## Privacy and service limits
 
-No accounts, database, analytics, or permanent image storage are implemented. Problem text and image bytes are sent to OpenAI only when the form is submitted; image submission requires a separate checkbox. The API sets `store: false` and responses use `Cache-Control: no-store`. Provider processing and retention policies still apply; do not upload personal information. Do not configure hosting request-body logging. Errors never return provider credentials or raw provider responses.
+No accounts, database, analytics, or permanent image storage are implemented. Submitted problem text goes to the selected provider, named on the input form. NVIDIA GPT-OSS receives text only. Image-capable OpenAI configurations can receive approved images; a separate checkbox is required and replacing an image clears consent. The OpenAI API request sets `store: false`; NVIDIA requests omit that unsupported option. Responses use `Cache-Control: no-store`. Provider processing and retention policies still apply; do not upload personal information. Do not configure hosting request-body logging. Errors never return credentials, reasoning traces, or raw provider responses.
 
-The API bounds the incoming body while streaming and restricts text to 4,000 characters. Uploads require matching image MIME type and signature, full decoding, a 16-megapixel maximum, and a still image. AI has a 25-second timeout. Unsupported topics, missing credentials, unavailable providers, invalid JSON, and out-of-range models produce explicit failures. Samples are deterministic local examples, never a fallback masquerading as successful AI interpretation.
+The API bounds the incoming body while streaming and restricts text to 4,000 characters. Uploads require matching image MIME type and signature, full decoding, a 16-megapixel maximum, and a still image. Provider timeouts are 45 seconds for NVIDIA and 25 seconds for OpenAI, within a 60-second route budget. Unsupported topics, missing credentials, unavailable providers, invalid JSON, and out-of-range models produce explicit failures. Samples are deterministic local examples, never a fallback masquerading as successful AI interpretation.
 
 ## Deployment
 
-Deploy as a Node.js Next.js application (not static export). Run `npm ci` and `npm run build`, then `npm start`; or use a Next.js-compatible host. Configure the two server environment variables in the host's secret settings. Allow a 30-second route duration and requests slightly over 2 MB for multipart overhead. The application writes no uploaded files and requires no persistent disk or database.
+Deploy as a Node.js Next.js application (not static export). Run `npm ci` and `npm run build`, then `npm start`; or use a Next.js-compatible host. Configure the selected provider's server environment variables in the host's secret settings for both preview and production. Allow a 60-second route duration and requests slightly over 2 MB for multipart overhead. The application writes no uploaded files and requires no persistent disk or database.
 
 Before public deployment, configure the hosting provider's request/concurrency limits and an API spending limit. The endpoint has no identity-based quota because the MVP has no accounts. A public endpoint can incur provider costs. Never expose the key in client settings.
 

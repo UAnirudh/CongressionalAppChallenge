@@ -5,10 +5,12 @@ import {
   validateImage,
 } from '@/lib/interpretation';
 import { MAX_TEXT_LENGTH } from '@/lib/upload';
+import { providerConfig } from '@/lib/provider';
 
 export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const maxDuration = 60;
 const headers = { 'Cache-Control': 'no-store' };
+
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get('content-type') || '';
@@ -37,15 +39,16 @@ export async function POST(request: Request) {
       throw new InterpretationError('Choose a valid image file.', 400);
     if (!text.trim() && !image)
       throw new InterpretationError('Type a problem or choose an image.', 400);
-    if (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL)
+    let config;
+    try {
+      config = providerConfig();
+    } catch (error) {
       throw new InterpretationError(
-        'AI interpretation is not configured on this server. You can still explore both sample exercises.',
+        error instanceof Error ? error.message : 'AI interpretation is not configured.',
         503,
       );
-    const result = await interpret(
-      { text: text.trim(), image },
-      { key: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL },
-    );
+    }
+    const result = await interpret({ text: text.trim(), image }, config);
     return Response.json(result, { headers });
   } catch (error) {
     const known = error instanceof InterpretationError;

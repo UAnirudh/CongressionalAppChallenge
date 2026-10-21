@@ -4,6 +4,8 @@ import { expect, test } from '@playwright/test';
 test('landing, review, and both simulators pass automated accessibility checks', async ({
   page,
 }) => {
+  // This journey performs four full axe scans, so budget for the whole audit.
+  test.setTimeout(60000);
   await page.goto('/');
   async function check() {
     const result = await new AxeBuilder({ page })
