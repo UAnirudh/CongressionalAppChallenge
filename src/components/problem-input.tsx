@@ -1,17 +1,21 @@
 'use client';
 import { useRef, useState } from 'react';
-import { interpretationSchema, type Problem } from '@/lib/models';
+import { interpretationSchema } from '@/lib/models';
 import { MAX_IMAGE_BYTES, MAX_TEXT_LENGTH } from '@/lib/upload';
+import {
+  errorProblemHandoff,
+  problemHandoffQuery,
+  publishProblemHandoff,
+  readyProblemHandoff,
+} from '@/lib/problem-transfer';
 import { Button } from './ui/button';
 import { Icon } from './icon';
 import type { ProviderInfo } from '@/lib/provider';
 
 export function ProblemInput({
-  onModel,
   onPending,
   provider,
 }: {
-  onModel: (problem: Problem) => void;
   onPending: (pending: boolean) => void;
   provider: ProviderInfo;
 }) {
@@ -31,11 +35,7 @@ export function ProblemInput({
         const image = data.get('image');
         const text = String(data.get('text') || '');
         if (!text.trim() && (!(image instanceof File) || !image.size)) {
-          setMessage(
-            provider.supportsImages
-              ? 'Type a problem or choose an image.'
-              : 'Type a problem to continue.',
-          );
+          setMessage('Type a problem or choose an image.');
           return;
         }
         if (
@@ -47,6 +47,29 @@ export function ProblemInput({
           setMessage('Use a PNG, JPEG, or WebP image no larger than 2 MB.');
           return;
         }
+
+        // Open the real problem page during the user gesture so the browser treats
+        // this as a new tab. The page waits for the model while the API interprets it.
+        const handoffId = crypto.randomUUID();
+        const problemTab = window.open(
+          `/problem?${problemHandoffQuery}=${encodeURIComponent(handoffId)}`,
+          '_blank',
+        );
+        if (!problemTab) {
+          setMessage('Allow pop-ups for this site to open a dedicated problem tab.');
+          return;
+        }
+        const deliver = (handoff: ReturnType<typeof errorProblemHandoff>) => {
+          const saved = publishProblemHandoff(handoffId, handoff);
+          if (!saved) {
+            problemTab.close();
+            setMessage(
+              'The new tab could not receive your problem. Check browser storage and try again.',
+            );
+          }
+          return saved;
+        };
+
         setPending(true);
         onPending(true);
         setMessage('');
@@ -58,26 +81,35 @@ export function ProblemInput({
           });
           const body = await response.json();
           if (!response.ok) {
-            setMessage(
-              typeof body.error === 'string' ? body.error : 'Interpretation failed. Try again.',
-            );
+            const message =
+              typeof body.error === 'string' ? body.error : 'Interpretation failed. Try again.';
+            deliver(errorProblemHandoff(message));
+            setMessage(message);
             return;
           }
           const result = interpretationSchema.safeParse(body);
           if (!result.success) {
-            setMessage('The server returned an invalid model. Try again or use a sample.');
+            const message = 'The server returned an invalid model. Try again or use a sample.';
+            deliver(errorProblemHandoff(message));
+            setMessage(message);
             return;
           }
           if (result.data.status === 'unsupported') {
-            setMessage(`Unsupported problem: ${result.data.reason}`);
+            const message = `Unsupported problem: ${result.data.reason}`;
+            deliver(errorProblemHandoff(message));
+            setMessage(message);
             return;
           }
-          onModel(result.data.problem);
+
+          if (!deliver(readyProblemHandoff(result.data.problem, text))) return;
+
           form.reset();
           setHasImage(false);
           setFileName('');
         } catch {
-          setMessage('The server could not be reached in time. Try again or use a sample.');
+          const message = 'The server could not be reached in time. Try again or use a sample.';
+          deliver(errorProblemHandoff(message));
+          setMessage(message);
         } finally {
           setPending(false);
           onPending(false);
@@ -93,33 +125,40 @@ export function ProblemInput({
           maxLength={MAX_TEXT_LENGTH}
           placeholder="A ball is launched at 20 m/s at 45 degrees from level ground…"
         />
-        {provider.supportsImages && (
-          <div className="upload-field">
-            <Icon name="upload" />
-            <label htmlFor="problem-image">
-              <strong>{fileName || 'Or upload a problem image'}</strong>
-              <span>PNG, JPG or WebP · Up to 2 MB</span>
-            </label>
-            <input
-              ref={imageInput}
-              id="problem-image"
-              name="image"
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              aria-label="Or upload a problem image"
-              onChange={(e) => {
-                setHasImage(Boolean(e.target.files?.[0]?.size));
-                setFileName(e.target.files?.[0]?.name ?? '');
-                setImageRevision((value) => value + 1);
-                setMessage('');
-              }}
-              aria-describedby="upload-note"
-            />
-          </div>
-        )}
+        <div className="upload-field">
+          <Icon name="upload" />
+          <label htmlFor="problem-image">
+            <strong>
+              {provider.supportsImages
+                ? fileName || 'Or upload a problem image'
+                : 'Image input unavailable with this model'}
+            </strong>
+            <span>
+              {provider.supportsImages
+                ? 'PNG, JPG or WebP · Up to 2 MB'
+                : 'Use a typed problem or a sample exercise'}
+            </span>
+          </label>
+          <input
+            ref={imageInput}
+            disabled={!provider.supportsImages}
+            id="problem-image"
+            name="image"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            aria-label="Or upload a problem image"
+            onChange={(e) => {
+              setHasImage(Boolean(e.target.files?.[0]?.size));
+              setFileName(e.target.files?.[0]?.name ?? '');
+              setImageRevision((value) => value + 1);
+              setMessage('');
+            }}
+            aria-describedby="upload-note"
+          />
+        </div>
         {!provider.supportsImages && (
           <p className="note image-unavailable">
-            GPT-OSS on {provider.name} reads text only. Type or paste your problem above.
+            This {provider.name} model reads text only. Type or paste your problem above.
           </p>
         )}
         {hasImage && (
@@ -139,8 +178,7 @@ export function ProblemInput({
         <p id="upload-note" className="note">
           {provider.supportsImages ? 'Text and images are' : 'Problem text is'} sent to{' '}
           {provider.name}, subject to provider retention policies. We don’t permanently store them.
-          Remove personal information first.
-          {provider.supportsImages && ' Still images only, up to 16 megapixels.'}
+          Remove personal information first. Still images only, up to 16 megapixels.
         </p>
         {hasImage && (
           <label className="consent" key={imageRevision}>
@@ -150,7 +188,7 @@ export function ProblemInput({
         )}
         <Button className="interpret-button" type="submit" disabled={pending}>
           <Icon name="spark" className={pending ? 'loading-icon' : undefined} />
-          {pending ? 'Reading your problem…' : 'Interpret problem'}
+          {pending ? 'Interpreting problem…' : 'Interpret problem'}
           {!pending && <Icon name="arrow" />}
         </Button>
       </fieldset>
@@ -158,7 +196,7 @@ export function ProblemInput({
         role="status"
         className={message ? 'error form-message' : pending ? 'pending-message' : 'empty-status'}
       >
-        {message || (pending ? 'Finding the variables and assumptions in your question…' : '')}
+        {message || (pending ? 'Reading your problem and preparing its dedicated tab…' : '')}
       </p>
     </form>
   );

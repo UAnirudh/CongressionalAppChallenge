@@ -2,13 +2,13 @@
 
 ## Direction
 
-A quiet science workspace: warm ivory, forest green, practical notebook typography, and diagrams that invite experimentation. The shared shell covers the learning lab, exercise library, guide, and missing-page state.
+A quiet science workspace with a warm paper palette, terracotta actions, practical notebook typography, and diagrams that invite experimentation. The shared shell covers the learning lab, exercise library, guide, and dedicated problem workspace.
 
 ## Foundations
 
-- Canvas `#f8f9f5`, sidebar `#f0f2eb`, surface `#ffffff`.
-- Primary ink `#253a30`, secondary ink `#5d6b5b`, action green `#2e664e`.
-- Borders `#dce2d6`; sage and parchment distinguish physics and mathematics exercises.
+- Canvas `#fbf4ea`, sidebar `#f1e2d0`, surface `#fffaf3`.
+- Primary ink `#392d29`, secondary ink `#78665d`, terracotta action `#a9503d`.
+- Borders `#e6d4c1`; parchment and muted blue distinguish surfaces and comparison graphs.
 - IBM Plex Sans and IBM Plex Mono are self-hosted by Next.js for readable product text, equations and measurements. Display text has no italic accent.
 - Tabular numerals are used for controls and calculated measurements.
 - A shared Button primitive owns primary, outline, disabled, pressed, and focus states.
@@ -17,7 +17,7 @@ A quiet science workspace: warm ivory, forest green, practical notebook typograp
 
 A compact top navigation uses visible text labels on desktop and phones. The learning lab has a short introduction instead of a decorative hero. The main content has a maximum width and switches to a single column on narrow screens. The learning lab retains the original input, review, exploration, and prediction flow.
 
-The library opens real model reviews through `/?sample=projectile` and `/?sample=linear`. The guide explains supported models, prediction tolerance, temporary state, and data handling. No navigation item is decorative.
+Submitting a typed problem opens a dedicated browser tab. Each problem page has Explanation, Explore, and Ask the tutor sections; the original question, graph, controls, and tutor stay together. The library opens real model reviews through `/?sample=projectile` and `/?sample=linear`. The guide explains supported models, prediction tolerance, temporary state, and data handling. No navigation item is decorative.
 
 ## Interaction
 
@@ -25,7 +25,8 @@ The library opens real model reviews through `/?sample=projectile` and `/?sample
 - Focus moves to the review or simulation heading on a view change, never on slider movement.
 - Existing temporary numeric drafts, fractional values, pending locks, and model preservation on failed interpretation are retained.
 - Graphs and controls share a panel on desktop and stack on mobile. Watermelon UI segmented tabs and semantic data-table patterns support the views; full source attribution is in THIRD_PARTY_NOTICES.md.
-- Flight playback, time inspection, height and velocity views, saved comparisons, gravity presets, coordinate inspection, graph zoom and data export deepen the two supported experiments.
+- Flight playback, pause-at-coordinate checkpoints, time inspection, height and velocity views, saved comparisons, gravity presets, graph point inspection, graph zoom and data export deepen the two supported experiments.
+- The tutor answers follow-up questions using the current problem and model, and can explain an inspected projectile point. Chat history stays in the browser tab and is sent to the configured provider only when a question is submitted.
 - CSV exports use full numeric precision; on-screen values use readable rounding. All new data and inspection results are hidden during an unanswered prediction.
 - Prediction mode hides graphs and calculated results until submission. Changing a variable clears prediction feedback.
 - Uploads show the selected filename, explicit image consent, provider disclosure, inline errors, and a pending message.

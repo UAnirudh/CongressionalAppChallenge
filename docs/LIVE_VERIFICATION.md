@@ -37,4 +37,4 @@ Use keyboard-only navigation and an actual screen reader on the target browser. 
 
 # NVIDIA configuration
 
-For `AI_PROVIDER=nvidia` (or the existing Vercel NVIDIA key/model pair), run the synthetic text cases below. GPT-OSS is text-only: image upload must be disabled in the UI, and a direct image request must return 422 without contacting NVIDIA. The image interpretation cases apply only to an explicitly configured image-capable OpenAI provider. See `docs/NVIDIA.md`.
+For `AI_PROVIDER=nvidia` (or the existing Vercel NVIDIA key/model pair), run the synthetic text cases below. With GPT-OSS, image upload must be disabled and direct image requests must return 422 without contacting NVIDIA. With Nemotron, verify the consent-gated image path as well as text interpretation. See `docs/NVIDIA.md`.

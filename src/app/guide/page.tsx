@@ -87,10 +87,12 @@ export default function Guide() {
             without an account or sending a problem to an AI provider.
           </p>
           <p>
-            When you choose “Interpret problem,” your problem is sent to the provider named on the
-            input form: NVIDIA or OpenAI. This app does not permanently store it; provider retention
-            policies apply. GPT-OSS on NVIDIA accepts text only. Image-capable OpenAI models require
-            your explicit agreement before image submission.
+            Choosing “Interpret problem” sends the problem to the provider named on the input form:
+            NVIDIA or OpenAI. Asking the tutor sends your question, current model values, and chat
+            history to that provider. ConceptLens does not save the chat after you leave the problem
+            tab; provider retention policies apply. NVIDIA GPT-OSS accepts text only; NVIDIA
+            Nemotron and compatible OpenAI models can also receive an image after you explicitly
+            agree to submit it.
           </p>
           <p>
             Remove names, school details, and other personal information before uploading. Images

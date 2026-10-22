@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { AppShell } from '@/components/app-shell';
+import 'katex/dist/katex.min.css';
 import './globals.css';
 const sans = localFont({
   src: './fonts/ibm-plex-sans-latin.woff2',

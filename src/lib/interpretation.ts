@@ -1,7 +1,7 @@
 import { interpretationSchema } from './models';
 import { MAX_IMAGE_BYTES, MAX_REQUEST_BYTES } from './upload';
 import sharp from 'sharp';
-import type { ProviderConfig } from './provider';
+import { nvidiaModelSupportsImages, type ProviderConfig } from './provider';
 
 export class InterpretationError extends Error {
   constructor(
@@ -84,15 +84,68 @@ Return exactly one JSON object in one of these formats:
 {"status":"unsupported","reason":"A concise explanation of what cannot be modeled."}
 Support exactly projectile_motion and linear_function. Projectile limits: speed 0..100 m/s, angle 0..90 degrees, gravity 0.1..30 m/s^2. Use 9.81 for Earth gravity only when gravity is unspecified and state that assumption. Speed and angle must be explicit or unambiguously derivable. Convert explicit compatible units to SI and explain conversions. Reject unequal heights, drag, negative gravity, and missing essential values. Linear limits: slope -100..100, intercept -1000..1000; only unitless y=mx+b. Reject dimensional linear word problems. Reject multiple problems, ambiguous extraction, illegible images, other topics, or requests requiring unsupported physics. At most 8 assumptions, each under 240 characters. Do not silently coerce unsupported cases to supported models.`;
 
+type CompletionPayload = {
+  requestId?: unknown;
+  request_id?: unknown;
+  choices?: Array<{
+    finish_reason?: string;
+    message?: { content?: unknown };
+  }>;
+};
+
+function nvidiaRequestId(payload: unknown) {
+  if (!payload || typeof payload !== 'object') return undefined;
+  const data = payload as Record<string, unknown>;
+  const id = data.requestId ?? data.request_id;
+  return typeof id === 'string' && id.length > 0 && id.length <= 128 ? id : undefined;
+}
+
+async function nvidiaRejectionMessage(response: Response) {
+  let detail = '';
+  try {
+    const payload = (await response.json()) as {
+      error?: string | { message?: unknown; code?: unknown };
+      message?: unknown;
+    };
+    const error = payload.error;
+    const message =
+      typeof error === 'string'
+        ? error
+        : error && typeof error === 'object'
+          ? (error.message ?? error.code)
+          : payload.message;
+    if (typeof message === 'string') detail = message.toLowerCase();
+  } catch {
+    // Use the HTTP status when NVIDIA doesn't return a JSON error body.
+  }
+  if (/model/.test(detail) && /(unknown|invalid|not found|not available|unavailable)/.test(detail))
+    return 'NVIDIA does not recognize or allow this model ID. Check NVIDIA_MODEL and confirm model access.';
+  if (/response.?format|json.?schema|structured.?output/.test(detail))
+    return 'NVIDIA rejected the structured-output setting. Retry the problem with the app’s JSON fallback.';
+  if (response.status === 422)
+    return 'NVIDIA rejected the problem request (HTTP 422). Try a shorter prompt or check model access.';
+  return 'NVIDIA rejected the request format (HTTP 400). Check the selected model and try again.';
+}
+
+function nvidiaUnavailableMessage(status: number) {
+  if (status === 404)
+    return 'NVIDIA returned HTTP 404 for the model or queued request. Check NVIDIA_MODEL and model access, then try again.';
+  if (status >= 500)
+    return 'NVIDIA returned a service error (HTTP ' + status + '). Try again shortly.';
+  return 'NVIDIA returned HTTP ' + status + '. Check model access and try again.';
+}
+
 export async function interpret(
   input: { text: string; image?: { mime: string; bytes: Uint8Array } },
   config: ProviderConfig,
   fetcher: typeof fetch = fetch,
 ) {
   const nvidia = config.provider === 'nvidia';
-  if (nvidia && input.image)
+  const nvidiaNemotron = nvidia && nvidiaModelSupportsImages(config.model);
+  const nvidiaTextOnly = nvidia && !nvidiaNemotron;
+  if (nvidiaTextOnly && input.image)
     throw new InterpretationError(
-      'GPT-OSS on NVIDIA supports text only. Paste or type the problem instead of uploading an image.',
+      'The selected NVIDIA model supports text only. Paste or type the problem instead of uploading an image.',
       422,
     );
   const content: Array<Record<string, unknown>> = [
@@ -106,6 +159,7 @@ export async function interpret(
       },
     });
   let response: Response;
+  const nvidiaDeadline = Date.now() + 45000;
   try {
     response = await fetcher(
       nvidia
@@ -117,7 +171,13 @@ export async function interpret(
         body: JSON.stringify({
           model: config.model,
           ...(nvidia
-            ? { max_tokens: 4096, reasoning_effort: 'low', stream: false }
+            ? {
+                max_tokens: 4096,
+                ...(nvidiaNemotron
+                  ? { chat_template_kwargs: { enable_thinking: true } }
+                  : { reasoning_effort: 'low' }),
+                stream: false,
+              }
             : {
                 store: false,
                 response_format: { type: 'json_object' },
@@ -125,7 +185,7 @@ export async function interpret(
               }),
           messages: [
             { role: 'system', content: instructions },
-            { role: 'user', content: nvidia ? input.text : content },
+            { role: 'user', content: input.image ? content : input.text },
           ],
         }),
         signal: AbortSignal.timeout(nvidia ? 45000 : 25000),
@@ -138,6 +198,50 @@ export async function interpret(
       502,
     );
   }
+  let data: CompletionPayload | undefined;
+  if (nvidia && response.status === 202) {
+    try {
+      data = (await response.json()) as CompletionPayload;
+      let requestId = nvidiaRequestId(data);
+      if (!requestId)
+        throw new InterpretationError(
+          'NVIDIA queued the problem but did not return a request ID. Try again shortly.',
+          502,
+        );
+      while (response.status === 202) {
+        const remaining = nvidiaDeadline - Date.now();
+        if (remaining <= 0)
+          throw new InterpretationError(
+            'NVIDIA is still processing this problem. Try again in a moment.',
+            504,
+          );
+        await new Promise((resolve) => setTimeout(resolve, Math.min(750, remaining)));
+        response = await fetcher(
+          `https://integrate.api.nvidia.com/v1/status/${encodeURIComponent(requestId)}`,
+          {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${config.key}`, Accept: 'application/json' },
+            signal: AbortSignal.timeout(Math.min(10000, remaining)),
+            cache: 'no-store',
+          },
+        );
+        if (response.status === 202) {
+          try {
+            const pending = await response.json();
+            requestId = nvidiaRequestId(pending) ?? requestId;
+          } catch {
+            // The request ID from the first response remains sufficient for polling.
+          }
+        }
+      }
+    } catch (error) {
+      if (error instanceof InterpretationError) throw error;
+      throw new InterpretationError(
+        'NVIDIA could not finish processing the problem. Try again shortly.',
+        502,
+      );
+    }
+  }
   if (response.status === 401 || response.status === 403)
     throw new InterpretationError(
       'The AI provider rejected this server’s credentials. Check the provider key and model access in hosting settings.',
@@ -148,20 +252,39 @@ export async function interpret(
       'The AI provider is at its usage limit. Try again shortly or use a sample.',
       503,
     );
+  if (response.status === 400 || response.status === 422)
+    throw new InterpretationError(
+      nvidia
+        ? await nvidiaRejectionMessage(response)
+        : 'The AI provider could not process this request. Check the problem text and try again.',
+      502,
+    );
   if (!response.ok)
     throw new InterpretationError(
-      'The interpretation service is unavailable. Try again or use a sample.',
+      nvidia
+        ? nvidiaUnavailableMessage(response.status)
+        : 'The interpretation service returned HTTP ' +
+            response.status +
+            '. Try again or use a sample.',
       502,
     );
   try {
-    const data = await response.json();
-    if (data.choices?.[0]?.finish_reason !== 'stop') throw new Error('Incomplete interpretation');
+    data ??= (await response.json()) as CompletionPayload;
+    if (data.choices?.[0]?.finish_reason !== 'stop') {
+      if (data.choices?.[0]?.finish_reason === 'length')
+        throw new InterpretationError(
+          'The AI response was cut off before it finished. Try a shorter or more specific problem.',
+          502,
+        );
+      throw new Error('Incomplete interpretation');
+    }
     // GPT-OSS reasoning is separate from final content. Never parse or return reasoning_content.
-    const text = data.choices[0].message.content;
+    const text = data.choices?.[0]?.message?.content;
     if (typeof text !== 'string') throw new Error('Missing final answer');
     const json = text.trim().replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i, '$1');
     return interpretationSchema.parse(JSON.parse(json));
-  } catch {
+  } catch (error) {
+    if (error instanceof InterpretationError) throw error;
     throw new InterpretationError(
       'The service returned an invalid or incomplete model. Rephrase the problem or use a clearer image.',
       502,
