@@ -64,10 +64,10 @@ test('Groq image interpretation requires consent and reaches editable review and
   await expect(problemTab.getByRole('tab')).toHaveCount(0);
   await problemTab.getByLabel('Slope (unitless)').fill('4');
   await problemTab.getByRole('button', { name: 'Confirm and explore' }).click();
+  await problemTab.getByRole('tab', { name: /Graph & controls/ }).click();
   await expect(
     problemTab.getByRole('heading', { name: 'Linear function', exact: true }),
   ).toBeVisible();
-  await problemTab.getByRole('tab', { name: /Graph & controls/ }).click();
   await expect(problemTab.getByLabel('Slope', { exact: true })).toHaveValue('4');
   expect(submissions).toBe(1);
   expect(

@@ -837,7 +837,7 @@ input[aria-invalid='true'] {
 }
 .sample-linear .subject-label,
 .sample-linear .sample-number {
-  color: #916c3e;
+  color: #765632;
 }
 .sample strong {
   display: block;
@@ -866,7 +866,7 @@ input[aria-invalid='true'] {
   color: #a34e3a;
 }
 .sample-linear .mini-equation {
-  color: #916c3e;
+  color: #765632;
 }
 .sample-arrow {
   width: 27px;
@@ -2067,7 +2067,7 @@ details ul {
 }
 .linear-visual .subject-tag {
   background: #fff9ed;
-  color: #916c3e;
+  color: #765632;
   border-color: #e6d3b4;
 }
 .exercise-body {

@@ -79,6 +79,7 @@ test('typed AI model opens its dedicated tab and unsupported output is honest', 
   const popup = page.waitForEvent('popup');
   await page.getByRole('button', { name: 'Interpret problem' }).click();
   const problemTab = await popup;
+  await problemTab.getByRole('tab', { name: /Graph & controls/ }).click();
   await expect(
     problemTab.getByRole('heading', { name: 'Linear function', exact: true }),
   ).toBeVisible();
