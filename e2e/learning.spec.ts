@@ -56,7 +56,9 @@ test('linear model updates and checks a prediction', async ({ page }) => {
     true,
   );
 });
-test('typed AI model requires review and unsupported output is honest', async ({ page }) => {
+test('typed AI model opens its dedicated tab and unsupported output is honest', async ({
+  page,
+}) => {
   await page.route('**/api/interpret', (route) =>
     route.fulfill({
       json: {
@@ -74,14 +76,18 @@ test('typed AI model requires review and unsupported output is honest', async ({
   );
   await page.goto('/');
   await page.getByLabel('Type your math or physics problem').fill('y = 3x - 2');
+  const popup = page.waitForEvent('popup');
   await page.getByRole('button', { name: 'Interpret problem' }).click();
-  await expect(page.getByRole('heading', { name: 'Check your model' })).toBeVisible();
+  const problemTab = await popup;
+  await expect(
+    problemTab.getByRole('heading', { name: 'Linear function', exact: true }),
+  ).toBeVisible();
+  await problemTab.getByRole('button', { name: 'Edit model & assumptions' }).click();
+  await expect(problemTab.getByLabel('Slope (unitless)')).toHaveValue('3');
   await expect(page.getByRole('heading', { name: 'Linear function', exact: true })).toHaveCount(0);
-  await expect(page.getByLabel('Slope (unitless)')).toHaveValue('3');
   await page.route('**/api/interpret', (route) =>
     route.fulfill({ json: { status: 'unsupported', reason: 'Calculus is not supported.' } }),
   );
-  await page.getByRole('button', { name: 'New problem', exact: true }).click();
   await page.getByLabel('Type your math or physics problem').fill('integrate x');
   await page.getByRole('button', { name: 'Interpret problem' }).click();
   await expect(page.getByText('Unsupported problem: Calculus is not supported.')).toBeVisible();

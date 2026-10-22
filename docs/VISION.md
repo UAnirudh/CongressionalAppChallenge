@@ -4,7 +4,7 @@
 
 Set server-only `GROQ_API_KEY` in Vercel production or a local `.env.local`. No key is needed in client code. The image model defaults to `qwen/qwen3.8-27b`; optional `GROQ_MODEL` must match this exact model. Configure the key separately for preview deployments if image interpretation is needed there. The presence of a Groq key or model selects Groq for images, even when a missing key causes a configuration error. It never borrows NVIDIA or OpenAI credentials.
 
-Typed problems retain the existing `AI_PROVIDER` selection (NVIDIA GPT-OSS or OpenAI). An image and its accompanying text are sent together only to Groq. Without Groq configuration, the original image behavior remains: OpenAI supports images, NVIDIA rejects them as text-only.
+Typed problems retain the existing `AI_PROVIDER` selection (NVIDIA GPT-OSS or OpenAI). An image and its accompanying text are sent together only to Groq. Without Groq configuration, the original image behavior remains: OpenAI supports images, NVIDIA GPT-OSS rejects them as text-only, while NVIDIA Nemotron retains its image adapter.
 
 ## Request and review
 
@@ -12,7 +12,7 @@ Typed problems retain the existing `AI_PROVIDER` selection (NVIDIA GPT-OSS or Op
 2. The server bounds multipart uploads, fully decodes PNG/JPEG/WebP, and rejects images over 2 MB, 16 megapixels, animation, and damaged files before transmission. Uploaded files are never written to disk.
 3. The Groq adapter posts to `https://api.groq.com/openai/v1/chat/completions`. It sends a base64 data URI with the image's actual MIME type, plus the accompanying text and model extraction instructions. It does not fetch user-supplied URLs.
 4. Parameters follow the supplied Qwen configuration: temperature 0.6, top_p 0.95, reasoning_effort default. JSON object mode and hidden reasoning keep the final output suitable for schema validation. The completion budget is 4096 tokens to allow reasoning and a complete model. Streaming is disabled so partial, unvalidated JSON never enters the simulation.
-5. Only a completed final answer passing the strict shared Zod schema reaches review. Reasoning, unknown fields, malformed output, unsupported topics, ambiguous or illegible images, and out-of-range parameters cannot create a simulation automatically. Students review and edit all parameters and assumptions before exploring.
+5. Only a completed final answer passing the strict shared Zod schema reaches review. Reasoning, unknown fields, malformed output, unsupported topics, ambiguous or illegible images, and out-of-range parameters cannot create a simulation automatically. Image interpretations open in the dedicated problem tab with mandatory review; students edit parameters and assumptions before exploring. The image itself is not transferred to the new tab or to tutor chat.
 
 The supported models remain unitless linear functions and level-ground projectile motion. Vision does not add other math/physics topics or arbitrary graph extraction. If a diagram lacks essential values, the model must return an unsupported result rather than invent values.
 

@@ -87,11 +87,12 @@ export default function Guide() {
             without an account or sending a problem to an AI provider.
           </p>
           <p>
-            When you choose “Interpret problem,” your problem is sent to the provider named on the
-            input form: NVIDIA, Groq, or OpenAI. This app does not permanently store it; provider
-            retention policies apply. With Groq vision enabled, images and accompanying text go to
-            Qwen on Groq, while typed problems still go to your text provider. Image submission
-            requires your explicit agreement each time you choose a new image.
+            Choosing “Interpret problem” sends the problem to the provider named on the input form:
+            NVIDIA, Groq, or OpenAI. With Groq vision enabled, images and accompanying text go to
+            Qwen on Groq, while typed problems and tutor questions use your text provider. Asking
+            the tutor sends your question, current model values, and chat history to that provider.
+            ConceptLens does not save the chat after you leave the problem tab; provider retention
+            policies apply. Image submission requires fresh consent when you choose a new image.
           </p>
           <p>
             Remove names, school details, and other personal information before uploading. Images

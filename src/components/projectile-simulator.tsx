@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { projectile, projectileState, projectileTable } from '@/lib/math';
 import type { Projectile } from '@/lib/models';
 import { ExplorerGraph, type GraphSeries } from './explorer-graph';
@@ -23,29 +23,70 @@ const views: { value: View; label: string }[] = [
 export function ProjectileSimulator({
   model,
   onChange,
+  onAskAboutPoint,
   hideResults,
   paused = false,
 }: {
   model: Projectile;
   onChange: (model: Projectile) => void;
+  onAskAboutPoint?: (point: ReturnType<typeof projectileState>) => void;
   hideResults: boolean;
   paused?: boolean;
 }) {
   const [view, setView] = useState<View>('trajectory');
   const [progress, setProgress] = useState(0.5);
+  const progressRef = useRef(0.5);
   const [playing, setPlaying] = useState(false);
   const [baseline, setBaseline] = useState<Projectile | null>(null);
   const [gravityPresetRevision, setGravityPresetRevision] = useState(0);
+  const [targetX, setTargetX] = useState('');
+  const [targetY, setTargetY] = useState('');
+  const [checkpoint, setCheckpoint] = useState<{ x: number; y: number; time: number } | null>(null);
+  const [playbackMessage, setPlaybackMessage] = useState('');
+  const launchKey = `${model.velocity}:${model.angle}:${model.gravity}`;
+  const [previousLaunch, setPreviousLaunch] = useState(launchKey);
+  if (previousLaunch !== launchKey) {
+    setPreviousLaunch(launchKey);
+    setPlaying(false);
+    setCheckpoint(null);
+    setTargetX('');
+    setTargetY('');
+    setPlaybackMessage('');
+  }
   const result = projectile(model),
     data = projectileTable(model);
   const current = projectileState(model, progress * result.flightTime);
   const comparison = baseline ? projectileTable(baseline) : null;
   const finished = progress >= 1;
+  const updateProgress = useCallback((value: number) => {
+    const bounded = Math.max(0, Math.min(1, value));
+    progressRef.current = bounded;
+    setProgress(bounded);
+  }, []);
   useEffect(() => {
     if (!playing || hideResults || paused || result.flightTime === 0 || finished) return;
-    const timer = setInterval(() => setProgress((value) => Math.min(1, value + 0.01)), 50);
+    const timer = setInterval(() => {
+      const previous = progressRef.current;
+      const next = Math.min(1, previous + 0.01);
+      const checkpointProgress = checkpoint ? checkpoint.time / result.flightTime : null;
+      const shouldPauseAtCheckpoint =
+        checkpointProgress !== null &&
+        checkpointProgress >= previous - 0.0001 &&
+        checkpointProgress <= next + 0.0001;
+      const nextProgress = shouldPauseAtCheckpoint ? checkpointProgress : next;
+      updateProgress(nextProgress);
+      if (shouldPauseAtCheckpoint && checkpoint) {
+        setPlaying(false);
+        setPlaybackMessage(
+          `Paused at (${checkpoint.x.toFixed(2)} m, ${checkpoint.y.toFixed(2)} m).`,
+        );
+      } else if (nextProgress >= 1) {
+        setPlaying(false);
+        setPlaybackMessage('The projectile has completed its flight.');
+      }
+    }, 50);
     return () => clearInterval(timer);
-  }, [playing, hideResults, paused, result.flightTime, finished]);
+  }, [playing, hideResults, paused, result.flightTime, finished, checkpoint, updateProgress]);
   const project = (row: typeof current) =>
     view === 'trajectory'
       ? { x: row.x, y: row.y }
@@ -70,6 +111,59 @@ export function ProjectileSimulator({
       ['time_s', 'distance_m', 'height_m', 'vx_m_s', 'vy_m_s', 'speed_m_s'],
       data.map((row) => [row.t, row.x, row.y, row.vx, row.vy, row.speed]),
     );
+  function setCoordinateCheckpoint() {
+    const x = Number(targetX);
+    const y = Number(targetY);
+    if (!targetX.trim() || !targetY.trim() || !Number.isFinite(x) || !Number.isFinite(y)) {
+      setPlaybackMessage('Enter both an x and y coordinate.');
+      return;
+    }
+    if (result.flightTime <= 0) {
+      setPlaybackMessage('This launch does not have a flight path to play.');
+      return;
+    }
+
+    const tolerance = Math.max(0.15, result.maxHeight * 0.02);
+    if (x < 0 || x > result.range || y < 0 || y > result.maxHeight + tolerance) {
+      setPlaybackMessage(
+        `Choose a point within this flight: x from 0 to ${result.range.toFixed(2)} m and y from 0 to ${result.maxHeight.toFixed(2)} m.`,
+      );
+      return;
+    }
+
+    const vx = model.velocity * Math.cos((model.angle * Math.PI) / 180);
+    const vy = model.velocity * Math.sin((model.angle * Math.PI) / 180);
+    let time: number;
+    if (Math.abs(vx) < 0.000001) {
+      if (x > tolerance) {
+        setPlaybackMessage('This launch travels straight up. Set x to 0 m.');
+        return;
+      }
+      const discriminant = vy * vy - 2 * model.gravity * y;
+      if (discriminant < -0.0001) {
+        setPlaybackMessage('That height is above the top of this flight.');
+        return;
+      }
+      time = (vy - Math.sqrt(Math.max(0, discriminant))) / model.gravity;
+    } else {
+      time = x / vx;
+      const actualY = Math.max(0, vy * time - (model.gravity * time * time) / 2);
+      if (time < 0 || time > result.flightTime || Math.abs(actualY - y) > tolerance) {
+        setPlaybackMessage(
+          `At x = ${x.toFixed(2)} m, this path is at y = ${actualY.toFixed(2)} m. Enter a point on the curve (within ${tolerance.toFixed(2)} m).`,
+        );
+        return;
+      }
+    }
+
+    const point = projectileState(model, Math.max(0, Math.min(result.flightTime, time)));
+    setCheckpoint({ x: point.x, y: point.y, time: point.t });
+    setPlaying(false);
+    updateProgress(0);
+    setPlaybackMessage(
+      `Pause point set at (${point.x.toFixed(2)} m, ${point.y.toFixed(2)} m). Press play to run from the launch.`,
+    );
+  }
   return (
     <section aria-labelledby="simulation-heading">
       <div className="simulation-title">
@@ -119,7 +213,7 @@ export function ProjectileSimulator({
                     ? undefined
                     : (i) => {
                         setPlaying(false);
-                        setProgress(i / 80);
+                        updateProgress(i / 80);
                       }
                 }
                 description={`Trajectory: range ${result.range.toFixed(2)} meters and peak ${result.maxHeight.toFixed(2)} meters. ${view === 'trajectory' ? 'Equal distance scales on both axes.' : view + ' over time.'}`}
@@ -134,7 +228,8 @@ export function ProjectileSimulator({
                   disabled={result.flightTime === 0}
                   aria-label={playing && progress < 1 ? 'Pause flight' : 'Play flight'}
                   onClick={() => {
-                    if (progress >= 1) setProgress(0);
+                    if (progress >= 1) updateProgress(0);
+                    setPlaybackMessage('');
                     setPlaying((v) => !v || progress >= 1);
                   }}
                 >
@@ -152,7 +247,7 @@ export function ProjectileSimulator({
                     value={progress}
                     onChange={(e) => {
                       setPlaying(false);
-                      setProgress(Number(e.target.value));
+                      updateProgress(Number(e.target.value));
                     }}
                   />
                 </label>
@@ -160,7 +255,8 @@ export function ProjectileSimulator({
                   className="text-action"
                   onClick={() => {
                     setPlaying(false);
-                    setProgress(0.5);
+                    updateProgress(0.5);
+                    setPlaybackMessage('');
                   }}
                 >
                   Peak
@@ -184,6 +280,48 @@ export function ProjectileSimulator({
                   <dd>{fmt(current.vy)} m/s</dd>
                 </div>
               </dl>
+              {onAskAboutPoint && (
+                <Button variant="outline" onClick={() => onAskAboutPoint(current)}>
+                  Ask the tutor about this moment
+                </Button>
+              )}
+              <section className="checkpoint-controls" aria-labelledby="checkpoint-heading">
+                <div>
+                  <h4 id="checkpoint-heading">Pause at a coordinate</h4>
+                  <p>Set an x and y point on the path; playback will stop there.</p>
+                </div>
+                <div className="checkpoint-fields">
+                  <label>
+                    x (m)
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="any"
+                      value={targetX}
+                      onChange={(event) => setTargetX(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    y (m)
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="any"
+                      value={targetY}
+                      onChange={(event) => setTargetY(event.target.value)}
+                    />
+                  </label>
+                  <Button variant="outline" onClick={setCoordinateCheckpoint}>
+                    Set pause point
+                  </Button>
+                </div>
+                <p className="playback-message" role="status">
+                  {playbackMessage ||
+                    (checkpoint
+                      ? `Marked at x = ${fmt(checkpoint.x)} m, y = ${fmt(checkpoint.y)} m.`
+                      : '')}
+                </p>
+              </section>
               <dl className="metrics">
                 <div>
                   <dt>Flight time</dt>

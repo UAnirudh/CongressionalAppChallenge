@@ -3,6 +3,13 @@ export type ProviderConfig = { provider?: AIProvider; key: string; model: string
 export type ProviderInfo = { name: string; supportsImages: boolean; imageProviderName?: string };
 type ProviderEnvironment = Readonly<Record<string, string | undefined>>;
 
+export const NVIDIA_NEMOTRON_VL_MODEL = 'nvidia/nemotron-3.5-super-vl-120b-a12b';
+const nvidiaTextModels = new Set(['openai/gpt-oss-20b', 'openai/gpt-oss-120b']);
+
+export function nvidiaModelSupportsImages(model: string | undefined) {
+  return model?.trim() === NVIDIA_NEMOTRON_VL_MODEL;
+}
+
 export function selectedProvider(
   env: ProviderEnvironment = process.env,
 ): Exclude<AIProvider, 'groq'> {
@@ -23,9 +30,9 @@ export function providerInfo(env: ProviderEnvironment = process.env): ProviderIn
         supportsImages: true,
         imageProviderName: 'Groq (Qwen 3.8)',
       };
-    return selectedProvider(env) === 'nvidia'
-      ? { name: 'NVIDIA', supportsImages: false }
-      : { name: 'OpenAI', supportsImages: true };
+    if (selectedProvider(env) === 'nvidia')
+      return { name: 'NVIDIA', supportsImages: nvidiaModelSupportsImages(env.NVIDIA_MODEL) };
+    return { name: 'OpenAI', supportsImages: true };
   } catch {
     return { name: 'the configured AI provider', supportsImages: false };
   }
@@ -54,7 +61,9 @@ export function providerConfig(env: ProviderEnvironment = process.env): Provider
     throw new Error(
       `${provider === 'nvidia' ? 'NVIDIA' : 'OpenAI'} interpretation is not configured on this server. You can still explore both sample exercises.`,
     );
-  if (provider === 'nvidia' && !/^openai\/gpt-oss-(20b|120b)$/.test(model))
-    throw new Error('Set NVIDIA_MODEL to openai/gpt-oss-20b or openai/gpt-oss-120b.');
+  if (provider === 'nvidia' && !nvidiaTextModels.has(model) && model !== NVIDIA_NEMOTRON_VL_MODEL)
+    throw new Error(
+      'Set NVIDIA_MODEL to nvidia/nemotron-3.5-super-vl-120b-a12b, openai/gpt-oss-20b, or openai/gpt-oss-120b.',
+    );
   return { provider, key, model };
 }

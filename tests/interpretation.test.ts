@@ -98,7 +98,7 @@ it('rejects Groq reasoning-only, truncated and invalid models without exposing r
         { provider: 'groq', key: 'test', model: 'qwen/qwen3.8-27b' },
         vi.fn<typeof fetch>().mockResolvedValue(response),
       ),
-    ).rejects.toThrow('invalid or incomplete');
+    ).rejects.toThrow(/invalid or incomplete|cut off/);
   }
   for (const status of [401, 403, 429, 500]) {
     await expect(
@@ -109,9 +109,29 @@ it('rejects Groq reasoning-only, truncated and invalid models without exposing r
           .fn<typeof fetch>()
           .mockResolvedValue(new Response('private provider details', { status })),
       ),
-    ).rejects.toThrow(
-      status === 429 ? 'usage limit' : status === 500 ? 'unavailable' : 'credentials',
+    ).rejects.toThrow(status === 429 ? 'usage limit' : status === 500 ? 'HTTP 500' : 'credentials');
+  }
+});
+
+it('reads the completed NVIDIA answer after a queued acknowledgement', async () => {
+  vi.useFakeTimers();
+  try {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ requestId: 'queued-id' }), { status: 202 }),
+      )
+      .mockResolvedValueOnce(complete({ status: 'supported', problem: samples[1] }));
+    const result = interpret(
+      { text: 'y=2x+1' },
+      { provider: 'nvidia', key: 'test', model: 'openai/gpt-oss-20b' },
+      fetcher,
     );
+    await vi.advanceTimersByTimeAsync(750);
+    await expect(result).resolves.toEqual({ status: 'supported', problem: samples[1] });
+    expect(fetcher.mock.calls[1][0]).toBe('https://integrate.api.nvidia.com/v1/status/queued-id');
+  } finally {
+    vi.useRealTimers();
   }
 });
 

@@ -55,16 +55,26 @@ test('Groq image interpretation requires consent and reaches editable review and
   await page
     .getByLabel('Type your math or physics problem')
     .fill('Read the equation in this image.');
+  const popup = page.waitForEvent('popup');
   await page.getByRole('button', { name: 'Interpret problem' }).click();
-  await expect(page.getByRole('heading', { name: 'Check your model' })).toBeFocused();
-  await expect(page.getByLabel('Slope (unitless)')).toHaveValue('3');
-  await expect(page.getByLabel('Intercept (unitless)')).toHaveValue('-7');
-  await page.getByLabel('Slope (unitless)').fill('4');
-  await page.getByRole('button', { name: 'Confirm and explore' }).click();
-  await expect(page.getByRole('heading', { name: 'Linear function', exact: true })).toBeVisible();
+  const problemTab = await popup;
+  await expect(problemTab.getByRole('heading', { name: 'Check your model' })).toBeFocused();
+  await expect(problemTab.getByLabel('Slope (unitless)')).toHaveValue('3');
+  await expect(problemTab.getByLabel('Intercept (unitless)')).toHaveValue('-7');
+  await expect(problemTab.getByRole('tab')).toHaveCount(0);
+  await problemTab.getByLabel('Slope (unitless)').fill('4');
+  await problemTab.getByRole('button', { name: 'Confirm and explore' }).click();
+  await expect(
+    problemTab.getByRole('heading', { name: 'Linear function', exact: true }),
+  ).toBeVisible();
+  await problemTab.getByRole('tab', { name: /Graph & controls/ }).click();
+  await expect(problemTab.getByLabel('Slope', { exact: true })).toHaveValue('4');
   expect(submissions).toBe(1);
   expect(
-    (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
-      .violations,
+    (
+      await new AxeBuilder({ page: problemTab })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .analyze()
+    ).violations,
   ).toEqual([]);
 });
