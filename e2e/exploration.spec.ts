@@ -91,12 +91,21 @@ test('an inspected coordinate can be brought into view from a zoomed graph or da
   await expect(page.getByLabel('X window (±)')).toHaveValue('100');
   await expect(page.getByText(/This coordinate is outside the current x window/)).toHaveCount(0);
   const graph = page.getByRole('img', { name: /Linear graph with slope/ });
-  const plotBox = await graph.boundingBox();
-  const pointBox = await graph.locator('.graph-point').boundingBox();
-  expect(pointBox!.x).toBeGreaterThan(plotBox!.x);
-  expect(pointBox!.x + pointBox!.width).toBeLessThan(plotBox!.x + plotBox!.width);
-  expect(pointBox!.y).toBeGreaterThan(plotBox!.y);
-  expect(pointBox!.y + pointBox!.height).toBeLessThan(plotBox!.y + plotBox!.height);
+  // Read both bounds in one frame; smooth scrolling can move them between separate calls.
+  await expect
+    .poll(() =>
+      graph.evaluate((svg) => {
+        const plot = svg.getBoundingClientRect();
+        const point = svg.querySelector('.graph-point')!.getBoundingClientRect();
+        return (
+          point.left > plot.left &&
+          point.right < plot.right &&
+          point.top > plot.top &&
+          point.bottom < plot.bottom
+        );
+      }),
+    )
+    .toBe(true);
   await page.getByRole('tab', { name: 'Data', exact: true }).click();
   await page.getByLabel('Inspect x', { exact: true }).fill('-1000');
   await page.getByRole('button', { name: 'Show on graph', exact: true }).click();
