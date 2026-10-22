@@ -24,15 +24,16 @@ export function ProblemWorkbench({
   const [predicting, setPredicting] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [inputOpen, setInputOpen] = useState(!initialProblem);
   const [viewRevision, setViewRevision] = useState(0);
   const output = useRef<HTMLDivElement>(null);
   const phase = model ? 'simulation' : draft ? 'review' : 'input';
-  const phaseIndex = phase === 'simulation' ? 2 : phase === 'review' ? 1 : 0;
   // Move focus only when changing views, never while adjusting a variable.
   useEffect(() => {
     output.current?.querySelector('h2')?.focus();
   }, [phase, viewRevision]);
   function load(problem: Problem) {
+    setInputOpen(false);
     setDraft(problem);
     setModel(null);
     setPredicting(false);
@@ -47,30 +48,32 @@ export function ProblemWorkbench({
   }
   return (
     <>
-      <ol className="journey" aria-label="Your learning journey">
-        {['Start with a question', 'Review your model', 'Explore & discover'].map((step, i) => (
-          <li
-            key={step}
-            className={i === phaseIndex ? 'current' : i < phaseIndex ? 'complete' : ''}
-            aria-current={i === phaseIndex ? 'step' : undefined}
+      {(draft || model) && (
+        <div className="lab-session-bar">
+          <span>{model ? 'Experiment in progress' : 'Review the values before you explore'}</span>
+          <Button
+            variant="outline"
+            aria-expanded={inputOpen}
+            aria-controls="problem-start"
+            onClick={() => setInputOpen((v) => !v)}
           >
-            <span className="step-number">
-              {i < phaseIndex ? <Icon name="check" /> : `0${i + 1}`}
-            </span>
-            <span>{step}</span>
-            {i < 2 && <span className="step-connector" />}
-          </li>
-        ))}
-      </ol>
-      <section className="start-section" aria-labelledby="start-heading">
+            {inputOpen ? 'Close problem picker' : 'New problem'}
+          </Button>
+        </div>
+      )}
+      <section
+        id="problem-start"
+        className="start-section"
+        aria-labelledby="start-heading"
+        hidden={!inputOpen}
+      >
         <div className="section-heading">
           <div>
             <h2 id="start-heading" tabIndex={-1}>
-              Where will your curiosity take you?
+              What are you working on?
             </h2>
-            <p>Bring your own question, or borrow one of ours.</p>
+            <p>Choose an experiment or type a problem to interpret.</p>
           </div>
-          <span className="section-index">01 / GET STARTED</span>
         </div>
         <div className="start-grid">
           <div className="input-panel">
@@ -80,16 +83,15 @@ export function ProblemWorkbench({
               </span>
               <div>
                 <h3>Start with your problem</h3>
-                <p>A question is all you need.</p>
               </div>
-              <span className="small-label">AI ASSISTED</span>
+              <span className="small-label">TEXT TO MODEL</span>
             </div>
             <ProblemInput onModel={load} onPending={setBusy} provider={provider} />
           </div>
           <div className="sample-panel">
             <div className="sample-panel-heading">
-              <h3>Or, jump right in</h3>
-              <span className="small-label">NO SETUP NEEDED</span>
+              <h3>Try an experiment</h3>
+              <span className="small-label">NO AI NEEDED</span>
             </div>
             <div className="sample-grid">
               <button disabled={busy} className="sample" onClick={() => load(samples[0])}>
@@ -153,11 +155,11 @@ export function ProblemWorkbench({
             />
           )}
           {model && (
-            <div className="panel simulation-panel">
+            <div className="panel simulation-panel" key={viewRevision}>
               <div className="toolbar">
                 <span className="eyebrow">
                   <span className="art-live-dot" />
-                  YOUR INTERACTIVE MODEL
+                  EXPLORATION
                 </span>
                 <div className="toolbar-actions">
                   <Button variant="outline" onClick={() => load(model)}>
@@ -182,12 +184,14 @@ export function ProblemWorkbench({
                   model={model}
                   onChange={change}
                   hideResults={predicting && !revealed}
+                  paused={busy}
                 />
               ) : (
                 <LinearSimulator
                   model={model}
                   onChange={change}
                   hideResults={predicting && !revealed}
+                  paused={busy}
                 />
               )}
               {predicting && (
@@ -205,20 +209,6 @@ export function ProblemWorkbench({
           )}
         </fieldset>
       </div>
-      {!draft && !model && (
-        <div className="learning-note">
-          <span className="square-icon">
-            <Icon name="sliders" />
-          </span>
-          <p>
-            <strong>The answer is just the beginning.</strong> Change a variable. Make a prediction.
-            Find out why.
-          </p>
-          <Link href="/guide" aria-label="Learn how ConceptLens works">
-            <Icon name="arrow" />
-          </Link>
-        </div>
-      )}
     </>
   );
 }

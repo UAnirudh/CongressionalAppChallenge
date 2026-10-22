@@ -81,6 +81,7 @@ test('typed AI model requires review and unsupported output is honest', async ({
   await page.route('**/api/interpret', (route) =>
     route.fulfill({ json: { status: 'unsupported', reason: 'Calculus is not supported.' } }),
   );
+  await page.getByRole('button', { name: 'New problem', exact: true }).click();
   await page.getByLabel('Type your math or physics problem').fill('integrate x');
   await page.getByRole('button', { name: 'Interpret problem' }).click();
   await expect(page.getByText('Unsupported problem: Calculus is not supported.')).toBeVisible();
@@ -130,6 +131,7 @@ test('failed interpretation preserves the existing edited model', async ({ page 
   await page.getByRole('button', { name: /A line with a pattern/ }).click();
   await page.getByRole('button', { name: 'Confirm and explore' }).click();
   await page.getByLabel('Slope', { exact: true }).fill('-4');
+  await page.getByRole('button', { name: 'New problem', exact: true }).click();
   await page.getByLabel('Type your math or physics problem').fill('new problem');
   await page.getByRole('button', { name: 'Interpret problem' }).click();
   await expect(page.getByText('The interpretation service is unavailable.')).toBeVisible();

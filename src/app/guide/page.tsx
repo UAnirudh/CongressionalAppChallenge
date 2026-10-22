@@ -21,7 +21,7 @@ const steps: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'target',
     title: 'Explore, predict, understand',
-    text: 'Move a slider or change a value to see the graph respond. Choose “Make a prediction” to hide the results, try an answer, then check your reasoning against the model.',
+    text: 'Move a slider or change a value to see the graph respond. Inspect points, switch graph views, save a comparison, or export data as CSV. Choose “Make a prediction” to hide the results, try an answer, then check your reasoning against the model.',
   },
 ];
 
@@ -62,8 +62,8 @@ export default function Guide() {
           </p>
           <h3>Linear functions</h3>
           <p>
-            Explore y = mx + b with unitless axes. The graph shows x from −10 to 10 and rescales the
-            y axis to fit your values.
+            Explore y = mx + b with unitless axes. Choose your x window, inspect any coordinate, and
+            compare a saved function. The y axis fits your values.
           </p>
           <h3>Checking predictions</h3>
           <p>

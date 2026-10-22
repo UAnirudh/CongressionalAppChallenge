@@ -20,6 +20,7 @@ test('landing, review, and both simulators pass automated accessibility checks',
   await page.getByRole('button', { name: 'Confirm and explore' }).click();
   await expect(page.getByRole('heading', { name: 'Projectile motion', exact: true })).toBeFocused();
   await check();
+  await page.getByRole('button', { name: 'New problem', exact: true }).click();
   await page.getByRole('button', { name: /A line with a pattern/ }).click();
   await page.getByRole('button', { name: 'Confirm and explore' }).click();
   await check();

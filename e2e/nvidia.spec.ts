@@ -19,7 +19,7 @@ test('NVIDIA text interpretation reaches review and exploration with honest imag
       },
     }),
   );
-  await page.goto('http://127.0.0.1:3101/');
+  await page.goto(`http://127.0.0.1:${process.env.E2E_NVIDIA_PORT || 3101}/`);
   await expect(page.getByText(/Problem text is sent to NVIDIA/)).toBeVisible();
   await expect(page.getByLabel('Or upload a problem image')).toBeDisabled();
   await expect(
