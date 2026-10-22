@@ -10,17 +10,17 @@ export const metadata = {
 const steps: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'spark',
-    title: 'Bring a little curiosity',
-    text: 'Type a projectile motion or unitless linear function problem, upload a clear image, or choose a ready-to-use exercise. Samples work without an AI connection.',
+    title: 'Choose a problem',
+    text: 'Type a projectile motion or unitless linear function problem, or choose a ready-to-use exercise. Samples work without an AI connection.',
   },
   {
     icon: 'sliders',
-    title: 'Make the model yours',
+    title: 'Review the model',
     text: 'Review every value and assumption. The interpretation can make mistakes, so compare it with your original problem and edit anything that needs correcting.',
   },
   {
     icon: 'target',
-    title: 'Explore, predict, understand',
+    title: 'Explore the result',
     text: 'Move a slider or change a value to see the graph respond. Inspect points, switch graph views, save a comparison, or export data as CSV. Choose “Make a prediction” to hide the results, try an answer, then check your reasoning against the model.',
   },
 ];
@@ -28,14 +28,10 @@ const steps: { icon: IconName; title: string; text: string }[] = [
 export default function Guide() {
   return (
     <main id="main" className="main-content guide-page">
-      <div className="page-intro">
-        <span className="eyebrow">A FIELD GUIDE TO CURIOSITY</span>
-        <h1>
-          Understanding starts
-          <br />
-          <em>with exploring.</em>
-        </h1>
-        <p>You don’t need to know the answer to get started. Just bring a question.</p>
+      <div className="page-intro compact-intro">
+        <span className="eyebrow">How it works</span>
+        <h1>A quick guide to the lab.</h1>
+        <p>From a problem to a model you can inspect, compare, and test.</p>
       </div>
       <div className="guide-steps">
         {steps.map((step, i) => (
@@ -63,7 +59,8 @@ export default function Guide() {
           <h3>Linear functions</h3>
           <p>
             Explore y = mx + b with unitless axes. Choose your x window, inspect any coordinate, and
-            compare a saved function. The y axis fits your values.
+            compare a saved function. Use “Show on graph” to bring an inspected coordinate into
+            view. The y axis fits your values.
           </p>
           <h3>Checking predictions</h3>
           <p>

@@ -27,6 +27,7 @@ export function LinearSimulator({
   const [extent, setExtent] = useState(10);
   const [inspect, setInspect] = useState(3);
   const [baseline, setBaseline] = useState<Linear | null>(null);
+  const [graphRevision, setGraphRevision] = useState(0);
   const data = Array.from({ length: 101 }, (_, i) => {
     const x = -extent + (i * extent) / 50;
     return { x, y: linearValue(model, x) };
@@ -101,6 +102,7 @@ export function LinearSimulator({
               />
             ) : (
               <ExplorerGraph
+                key={graphRevision}
                 series={series}
                 xLabel="x (unitless)"
                 yLabel="y (unitless)"
@@ -123,7 +125,24 @@ export function LinearSimulator({
                 <span className="inspect-result">
                   f({fmt(inspect)}) = <strong>{fmt(selected.y)}</strong>
                 </span>
+                <button
+                  className="text-action"
+                  type="button"
+                  onClick={() => {
+                    setExtent(Math.max(extent, Math.abs(inspect)));
+                    setView('graph');
+                    setGraphRevision((n) => n + 1);
+                  }}
+                >
+                  Show on graph
+                </button>
               </div>
+              {Math.abs(inspect) > extent && (
+                <p className="inspection-note">
+                  This coordinate is outside the current x window. Choose “Show on graph” to include
+                  it.
+                </p>
+              )}
               <dl className="metrics">
                 <div>
                   <dt>Slope · m</dt>

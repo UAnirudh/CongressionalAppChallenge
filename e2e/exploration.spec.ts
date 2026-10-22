@@ -78,6 +78,37 @@ test('linear inspector, expanded domain, constants, and comparison stay accurate
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test('an inspected coordinate can be brought into view from a zoomed graph or data table', async ({
+  page,
+}) => {
+  await page.goto('/?sample=linear');
+  await page.getByRole('button', { name: 'Confirm and explore' }).click();
+  await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  await page.getByLabel('Inspect x', { exact: true }).fill('100');
+  await expect(page.getByText('f(100) =')).toContainText('201');
+  await expect(page.getByText(/This coordinate is outside the current x window/)).toBeVisible();
+  await page.getByRole('button', { name: 'Show on graph', exact: true }).click();
+  await expect(page.getByLabel('X window (±)')).toHaveValue('100');
+  await expect(page.getByText(/This coordinate is outside the current x window/)).toHaveCount(0);
+  const graph = page.getByRole('img', { name: /Linear graph with slope/ });
+  const plotBox = await graph.boundingBox();
+  const pointBox = await graph.locator('.graph-point').boundingBox();
+  expect(pointBox!.x).toBeGreaterThan(plotBox!.x);
+  expect(pointBox!.x + pointBox!.width).toBeLessThan(plotBox!.x + plotBox!.width);
+  expect(pointBox!.y).toBeGreaterThan(plotBox!.y);
+  expect(pointBox!.y + pointBox!.height).toBeLessThan(plotBox!.y + plotBox!.height);
+  await page.getByRole('tab', { name: 'Data', exact: true }).click();
+  await page.getByLabel('Inspect x', { exact: true }).fill('-1000');
+  await page.getByRole('button', { name: 'Show on graph', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Graph', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.getByLabel('X window (±)')).toHaveValue('1000');
+  await expect(page.getByText('f(-1,000) =')).toContainText('-1,999');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('pending interpretation freezes the current flight and recovers on failure', async ({
   page,
 }) => {
