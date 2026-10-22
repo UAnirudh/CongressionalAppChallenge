@@ -48,6 +48,93 @@ it.each(['openai/gpt-oss-20b', 'openai/gpt-oss-120b'])(
   },
 );
 
+it('sends approved images to Groq Qwen with JSON mode and only consumes the final answer', async () => {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(complete({ status: 'supported', problem: samples[1] }));
+  expect(
+    await interpret(
+      { text: 'Read this graph.', image: { mime: 'image/png', bytes: new Uint8Array([1, 2, 3]) } },
+      { provider: 'groq', key: 'groq-test', model: 'qwen/qwen3.8-27b' },
+      fetcher,
+    ),
+  ).toEqual({ status: 'supported', problem: samples[1] });
+  expect(fetcher.mock.calls[0][0]).toBe('https://api.groq.com/openai/v1/chat/completions');
+  expect(fetcher.mock.calls[0][1]?.headers).toMatchObject({ Authorization: 'Bearer groq-test' });
+  const sent = JSON.parse(String(fetcher.mock.calls[0][1]?.body));
+  expect(sent).toMatchObject({
+    model: 'qwen/qwen3.8-27b',
+    temperature: 0.6,
+    top_p: 0.95,
+    max_completion_tokens: 4096,
+    reasoning_effort: 'default',
+    reasoning_format: 'hidden',
+    stream: false,
+    response_format: { type: 'json_object' },
+  });
+  expect(sent.messages[1].content).toEqual([
+    { type: 'text', text: 'Read this graph.' },
+    { type: 'image_url', image_url: { url: 'data:image/png;base64,AQID' } },
+  ]);
+  expect(sent).not.toHaveProperty('store');
+  expect(sent).not.toHaveProperty('max_tokens');
+});
+
+it('rejects Groq reasoning-only, truncated and invalid models without exposing raw responses', async () => {
+  for (const response of [
+    new Response(
+      JSON.stringify({
+        choices: [{ finish_reason: 'stop', message: { reasoning: 'secret reasoning' } }],
+      }),
+    ),
+    new Response(
+      JSON.stringify({ choices: [{ finish_reason: 'length', message: { content: '{}' } }] }),
+    ),
+    complete({ status: 'supported', problem: { ...samples[1], slope: 101 } }),
+  ]) {
+    await expect(
+      interpret(
+        { text: 'image' },
+        { provider: 'groq', key: 'test', model: 'qwen/qwen3.8-27b' },
+        vi.fn<typeof fetch>().mockResolvedValue(response),
+      ),
+    ).rejects.toThrow(/invalid or incomplete|cut off/);
+  }
+  for (const status of [401, 403, 429, 500]) {
+    await expect(
+      interpret(
+        { text: 'image' },
+        { provider: 'groq', key: 'test', model: 'qwen/qwen3.8-27b' },
+        vi
+          .fn<typeof fetch>()
+          .mockResolvedValue(new Response('private provider details', { status })),
+      ),
+    ).rejects.toThrow(status === 429 ? 'usage limit' : status === 500 ? 'HTTP 500' : 'credentials');
+  }
+});
+
+it('reads the completed NVIDIA answer after a queued acknowledgement', async () => {
+  vi.useFakeTimers();
+  try {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ requestId: 'queued-id' }), { status: 202 }),
+      )
+      .mockResolvedValueOnce(complete({ status: 'supported', problem: samples[1] }));
+    const result = interpret(
+      { text: 'y=2x+1' },
+      { provider: 'nvidia', key: 'test', model: 'openai/gpt-oss-20b' },
+      fetcher,
+    );
+    await vi.advanceTimersByTimeAsync(750);
+    await expect(result).resolves.toEqual({ status: 'supported', problem: samples[1] });
+    expect(fetcher.mock.calls[1][0]).toBe('https://integrate.api.nvidia.com/v1/status/queued-id');
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 it('rejects images for GPT-OSS before sending any data', async () => {
   const fetcher = vi.fn<typeof fetch>();
   await expect(

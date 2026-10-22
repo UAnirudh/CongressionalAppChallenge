@@ -14,15 +14,15 @@ Use the exact `NVIDIA_MODEL` enabled on the account: `nvidia/nemotron-3.5-super-
 2. `/api/interpret` enforces text, request, image, and consent bounds, then resolves the server provider configuration.
 3. NVIDIA uses `https://integrate.api.nvidia.com/v1/chat/completions`, `max_tokens: 4096`, and `reasoning_effort: low`. GPT-OSS receives a plain text user message. Nemotron receives text and, when provided with explicit consent, multimodal image content. NVIDIA requests omit OpenAI-specific `store` and `max_completion_tokens` options.
 4. Only the completed final message is parsed. Optional JSON fences are removed; the full result must pass the existing strict Zod model schema. Separate `reasoning_content` is never returned or interpreted as the answer.
-5. The student reviews all values and assumptions before simulation. The graph and prediction checks use deterministic local math.
+5. Image-derived models require review before simulation. Typed models remain editable in their dedicated tab. The graph and prediction checks use deterministic local math.
 
 NVIDIA calls have a 45-second deadline, the route allows 60 seconds, and the client waits up to 65 seconds. Authentication, quota, transport, malformed-output, and truncated-output failures remain explicit and preserve the existing model.
 
 ## Images
 
-Both GPT-OSS models are text-only. In NVIDIA mode with GPT-OSS, upload is disabled with an explanation and direct image submissions receive a 422 response before provider transmission. Nemotron can interpret text and images; image submission requires the app’s explicit consent checkbox. NVIDIA documents the [Nemotron API](https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3_5-super-vl-120b-a12b-infer) and the [GPT-OSS API](https://docs.api.nvidia.com/nim/reference/openai-gpt-oss-20b-infer).
+Both GPT-OSS models are text-only. When `GROQ_API_KEY` is configured, approved images and accompanying text use the separately disclosed Groq Qwen vision adapter. Typed problems still use NVIDIA. See [vision architecture](VISION.md).
 
-Explicit `AI_PROVIDER=openai` retains the existing image-capable adapter and consent flow. Request formats, credentials, and public capability descriptions remain separate.
+Without a Groq configuration, NVIDIA GPT-OSS hides image upload and direct image submissions receive a 422 response before provider transmission. NVIDIA Nemotron retains its consent-based image adapter. Explicit `AI_PROVIDER=openai` retains the original image-capable adapter when Groq is not configured. Each adapter uses its own credentials, request options, and capability disclosure.
 
 ## Verification
 

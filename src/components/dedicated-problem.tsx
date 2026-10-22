@@ -79,6 +79,7 @@ export function DedicatedProblem({
           question={handoff.question}
           provider={provider}
           dedicated
+          requiresReview={handoff.requiresReview}
         />
       ) : (
         <section className="panel missing-problem" aria-labelledby="missing-problem-heading">

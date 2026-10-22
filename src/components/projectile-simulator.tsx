@@ -43,6 +43,16 @@ export function ProjectileSimulator({
   const [targetY, setTargetY] = useState('');
   const [checkpoint, setCheckpoint] = useState<{ x: number; y: number; time: number } | null>(null);
   const [playbackMessage, setPlaybackMessage] = useState('');
+  const launchKey = `${model.velocity}:${model.angle}:${model.gravity}`;
+  const [previousLaunch, setPreviousLaunch] = useState(launchKey);
+  if (previousLaunch !== launchKey) {
+    setPreviousLaunch(launchKey);
+    setPlaying(false);
+    setCheckpoint(null);
+    setTargetX('');
+    setTargetY('');
+    setPlaybackMessage('');
+  }
   const result = projectile(model),
     data = projectileTable(model);
   const current = projectileState(model, progress * result.flightTime);
@@ -77,13 +87,6 @@ export function ProjectileSimulator({
     }, 50);
     return () => clearInterval(timer);
   }, [playing, hideResults, paused, result.flightTime, finished, checkpoint, updateProgress]);
-  useEffect(() => {
-    setPlaying(false);
-    setCheckpoint(null);
-    setTargetX('');
-    setTargetY('');
-    setPlaybackMessage('');
-  }, [model.velocity, model.angle, model.gravity]);
   const project = (row: typeof current) =>
     view === 'trajectory'
       ? { x: row.x, y: row.y }
@@ -207,11 +210,11 @@ export function ProjectileSimulator({
                 equalScale={view === 'trajectory'}
                 onInspect={
                   paused
-                      ? undefined
-                      : (i) => {
-                          setPlaying(false);
-                          updateProgress(i / 80);
-                        }
+                    ? undefined
+                    : (i) => {
+                        setPlaying(false);
+                        updateProgress(i / 80);
+                      }
                 }
                 description={`Trajectory: range ${result.range.toFixed(2)} meters and peak ${result.maxHeight.toFixed(2)} meters. ${view === 'trajectory' ? 'Equal distance scales on both axes.' : view + ' over time.'}`}
               />

@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 test('NVIDIA text interpretation reaches review and exploration with honest image capabilities', async ({
   page,
 }) => {
+  test.setTimeout(60000);
   await page.route('**/api/interpret', (route) =>
     route.fulfill({
       json: {
@@ -29,13 +30,21 @@ test('NVIDIA text interpretation reaches review and exploration with honest imag
     page.getByText('GPT-OSS on NVIDIA reads text only. Type or paste your problem above.'),
   ).toBeVisible();
   await page.getByLabel('Type your math or physics problem').fill('y = 3x - 2');
+  const popup = page.waitForEvent('popup');
   await page.getByRole('button', { name: 'Interpret problem' }).click();
-  await expect(page.getByRole('heading', { name: 'Check your model' })).toBeFocused();
-  await expect(page.getByLabel('Slope (unitless)')).toHaveValue('3');
-  await page.getByRole('button', { name: 'Confirm and explore' }).click();
-  await expect(page.getByRole('heading', { name: 'Linear function', exact: true })).toBeVisible();
+  const problemTab = await popup;
+  await problemTab.getByRole('tab', { name: /Graph & controls/ }).click();
+  await expect(
+    problemTab.getByRole('heading', { name: 'Linear function', exact: true }),
+  ).toBeVisible();
+  await problemTab.getByRole('button', { name: 'Edit model & assumptions' }).click();
+  await expect(problemTab.getByLabel('Slope (unitless)')).toHaveValue('3');
+  await problemTab.getByRole('button', { name: 'Confirm and explore' }).click();
   expect(
-    (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
-      .violations,
+    (
+      await new AxeBuilder({ page: problemTab })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .analyze()
+    ).violations,
   ).toEqual([]);
 });

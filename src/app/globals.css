@@ -837,7 +837,7 @@ input[aria-invalid='true'] {
 }
 .sample-linear .subject-label,
 .sample-linear .sample-number {
-  color: #916c3e;
+  color: #765632;
 }
 .sample strong {
   display: block;
@@ -866,7 +866,7 @@ input[aria-invalid='true'] {
   color: #a34e3a;
 }
 .sample-linear .mini-equation {
-  color: #916c3e;
+  color: #765632;
 }
 .sample-arrow {
   width: 27px;
@@ -1536,7 +1536,7 @@ input[type='range'] {
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
-  color: var(--muted);
+  color: #655244;
   text-align: left;
   transition:
     background 0.18s ease,
@@ -1562,7 +1562,7 @@ input[type='range'] {
   place-items: center;
   border-radius: 50%;
   background: #ead9c4;
-  color: #885b40;
+  color: #754d34;
   font-size: 10px;
   font-weight: 650;
 }
@@ -1580,7 +1580,7 @@ input[type='range'] {
   font-weight: 600;
 }
 .problem-tab-copy small {
-  color: var(--muted);
+  color: #655244;
   font-size: 10px;
 }
 .problem-tab-panel[hidden] {
@@ -1946,7 +1946,7 @@ input[type='range'] {
   padding: 6px 9px;
   border-radius: 999px;
   background: #f0dfc8;
-  color: #8e6034;
+  color: #724b27;
   font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.8px;
@@ -2067,7 +2067,7 @@ details ul {
 }
 .linear-visual .subject-tag {
   background: #fff9ed;
-  color: #916c3e;
+  color: #765632;
   border-color: #e6d3b4;
 }
 .exercise-body {

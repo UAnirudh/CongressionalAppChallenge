@@ -5,7 +5,7 @@ import {
   validateImage,
 } from '@/lib/interpretation';
 import { MAX_TEXT_LENGTH } from '@/lib/upload';
-import { providerConfig } from '@/lib/provider';
+import { imageProviderConfig, providerConfig } from '@/lib/provider';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     if (form.getAll('image').length > 1 || form.getAll('text').length !== 1)
       throw new InterpretationError('Submit one problem and at most one image.', 400);
     let image: { mime: string; bytes: Uint8Array } | undefined;
-    if (file instanceof File && file.size > 0) {
+    if (file instanceof File && (file.size > 0 || file.name)) {
       if (form.get('imageConsent') !== 'yes')
         throw new InterpretationError('Confirm image processing before uploading.', 400);
       image = { mime: file.type, bytes: new Uint8Array(await file.arrayBuffer()) };
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       throw new InterpretationError('Type a problem or choose an image.', 400);
     let config;
     try {
-      config = providerConfig();
+      config = image ? imageProviderConfig() : providerConfig();
     } catch (error) {
       throw new InterpretationError(
         error instanceof Error ? error.message : 'AI interpretation is not configured.',

@@ -1,11 +1,11 @@
 # Product requirements: Projectile exploration
 
-| Field | Value |
-| --- | --- |
-| Product | ConceptLens |
-| Feature area | Projectile motion detail page |
-| Status | Implemented; deployment not verified |
-**Audience:** Students learning introductory projectile motion
+| Field                                                          | Value                                |
+| -------------------------------------------------------------- | ------------------------------------ |
+| Product                                                        | ConceptLens                          |
+| Feature area                                                   | Projectile motion detail page        |
+| Status                                                         | Implemented; deployment not verified |
+| **Audience:** Students learning introductory projectile motion |
 
 ## Summary
 

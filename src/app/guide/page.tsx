@@ -88,11 +88,11 @@ export default function Guide() {
           </p>
           <p>
             Choosing “Interpret problem” sends the problem to the provider named on the input form:
-            NVIDIA or OpenAI. Asking the tutor sends your question, current model values, and chat
-            history to that provider. ConceptLens does not save the chat after you leave the problem
-            tab; provider retention policies apply. NVIDIA GPT-OSS accepts text only; NVIDIA
-            Nemotron and compatible OpenAI models can also receive an image after you explicitly
-            agree to submit it.
+            NVIDIA, Groq, or OpenAI. With Groq vision enabled, images and accompanying text go to
+            Qwen on Groq, while typed problems and tutor questions use your text provider. Asking
+            the tutor sends your question, current model values, and chat history to that provider.
+            ConceptLens does not save the chat after you leave the problem tab; provider retention
+            policies apply. Image submission requires fresh consent when you choose a new image.
           </p>
           <p>
             Remove names, school details, and other personal information before uploading. Images

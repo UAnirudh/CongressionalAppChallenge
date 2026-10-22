@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 const port = Number(process.env.E2E_PORT || 3000);
 const nvidiaPort = Number(process.env.E2E_NVIDIA_PORT || 3101);
+const visionPort = Number(process.env.E2E_VISION_PORT || 3102);
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -15,7 +16,13 @@ export default defineConfig({
       url: `http://127.0.0.1:${port}`,
       reuseExistingServer: !process.env.CI,
       timeout: 120000,
-      env: { AI_PROVIDER: 'openai', OPENAI_API_KEY: '', OPENAI_MODEL: '' },
+      env: {
+        AI_PROVIDER: 'openai',
+        OPENAI_API_KEY: '',
+        OPENAI_MODEL: '',
+        GROQ_API_KEY: '',
+        GROQ_MODEL: '',
+      },
     },
     {
       command: `node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${nvidiaPort}`,
@@ -26,6 +33,21 @@ export default defineConfig({
         AI_PROVIDER: 'nvidia',
         NVIDIA_MODEL: 'openai/gpt-oss-20b',
         NVIDIA_API_KEY: 'e2e-placeholder-not-a-real-key',
+        GROQ_API_KEY: '',
+        GROQ_MODEL: '',
+      },
+    },
+    {
+      command: `node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${visionPort}`,
+      url: `http://127.0.0.1:${visionPort}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120000,
+      env: {
+        AI_PROVIDER: 'nvidia',
+        NVIDIA_MODEL: 'openai/gpt-oss-20b',
+        NVIDIA_API_KEY: 'e2e-placeholder-not-a-real-key',
+        GROQ_API_KEY: 'e2e-vision-placeholder-not-a-real-key',
+        GROQ_MODEL: 'qwen/qwen3.8-27b',
       },
     },
   ],

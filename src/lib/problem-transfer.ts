@@ -9,6 +9,7 @@ export const problemHandoffSchema = z.discriminatedUnion('status', [
     status: z.literal('ready'),
     problem: problemSchema,
     question: z.string().max(4000).optional(),
+    requiresReview: z.boolean().optional(),
   }),
   z.strictObject({ status: z.literal('error'), message: z.string().min(1).max(500) }),
 ]);
@@ -66,11 +67,16 @@ export function consumeProblemHandoff(id: string) {
   }
 }
 
-export function readyProblemHandoff(problem: Problem, question?: string): ProblemHandoff {
+export function readyProblemHandoff(
+  problem: Problem,
+  question?: string,
+  requiresReview = false,
+): ProblemHandoff {
   const trimmedQuestion = question?.trim().slice(0, 4000);
   return {
     status: 'ready',
     problem,
+    ...(requiresReview ? { requiresReview: true } : {}),
     ...(trimmedQuestion ? { question: trimmedQuestion } : {}),
   };
 }

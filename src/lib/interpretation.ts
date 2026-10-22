@@ -141,6 +141,7 @@ export async function interpret(
   fetcher: typeof fetch = fetch,
 ) {
   const nvidia = config.provider === 'nvidia';
+  const groq = config.provider === 'groq';
   const nvidiaNemotron = nvidia && nvidiaModelSupportsImages(config.model);
   const nvidiaTextOnly = nvidia && !nvidiaNemotron;
   if (nvidiaTextOnly && input.image)
@@ -164,7 +165,9 @@ export async function interpret(
     response = await fetcher(
       nvidia
         ? 'https://integrate.api.nvidia.com/v1/chat/completions'
-        : 'https://api.openai.com/v1/chat/completions',
+        : groq
+          ? 'https://api.groq.com/openai/v1/chat/completions'
+          : 'https://api.openai.com/v1/chat/completions',
       {
         method: 'POST',
         headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
@@ -178,17 +181,27 @@ export async function interpret(
                   : { reasoning_effort: 'low' }),
                 stream: false,
               }
-            : {
-                store: false,
-                response_format: { type: 'json_object' },
-                max_completion_tokens: 1600,
-              }),
+            : groq
+              ? {
+                  temperature: 0.6,
+                  top_p: 0.95,
+                  max_completion_tokens: 4096,
+                  reasoning_effort: 'default',
+                  reasoning_format: 'hidden',
+                  stream: false,
+                  response_format: { type: 'json_object' },
+                }
+              : {
+                  store: false,
+                  response_format: { type: 'json_object' },
+                  max_completion_tokens: 1600,
+                }),
           messages: [
             { role: 'system', content: instructions },
             { role: 'user', content: input.image ? content : input.text },
           ],
         }),
-        signal: AbortSignal.timeout(nvidia ? 45000 : 25000),
+        signal: AbortSignal.timeout(nvidia || groq ? 45000 : 25000),
         cache: 'no-store',
       },
     );
@@ -234,6 +247,8 @@ export async function interpret(
           }
         }
       }
+      // The initial body only acknowledges the queue; parse the completed response below.
+      data = undefined;
     } catch (error) {
       if (error instanceof InterpretationError) throw error;
       throw new InterpretationError(
