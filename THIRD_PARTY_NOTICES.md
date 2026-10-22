@@ -25,3 +25,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## IBM Plex fonts
+
+IBM Plex Sans and IBM Plex Mono are bundled locally as unmodified WOFF2 files from Google Fonts under the SIL Open Font License. Source URLs, sizes, and hashes are recorded in src/app/fonts/README.md. The matching licenses are in src/app/fonts/OFL-Sans.txt and src/app/fonts/OFL-Mono.txt.
