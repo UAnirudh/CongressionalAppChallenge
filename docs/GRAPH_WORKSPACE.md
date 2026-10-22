@@ -21,3 +21,10 @@ The user requested less generic typography, real component references such as Wa
 - https://help.desmos.com/hc/en-us/articles/4406040715149-Getting-Started-Desmos-Graphing-Calculator: coordinate inspection, editable parameters and data tables as useful mathematical interactions.
 
 Watermelon implementations are adapted to native controls and existing CSS instead of importing a second primitive framework. Full attribution is in THIRD_PARTY_NOTICES.md. No external scripts or tracking are embedded.
+
+## Continuation: consistency and coordinate visibility
+
+- Keep the library and guide as compact as the learning lab; use direct instructions and retain privacy details.
+- For text-only providers, show the text capability and retention disclosure without a disabled image upload box or irrelevant image limits. Keep image upload and fresh consent for image-capable providers.
+- An inspected coordinate can be outside the current plotted x window. Offer Show on graph to expand the x window, restore the graph tab, and reset zoom so the point is visible.
+- Preserve the current model, mandatory AI review, keyboard access, prediction hiding, and all existing calculations.

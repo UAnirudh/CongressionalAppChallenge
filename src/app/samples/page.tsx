@@ -11,17 +11,10 @@ export const metadata = {
 export default function Samples() {
   return (
     <main id="main" className="main-content library-page">
-      <div className="page-intro">
-        <span className="eyebrow">THE EXERCISE LIBRARY</span>
-        <h1>
-          Small questions.
-          <br />
-          <em>Big discoveries.</em>
-        </h1>
-        <p>
-          A starting point for your next “aha.” Pick an exercise, make it your own, and follow your
-          curiosity.
-        </p>
+      <div className="page-intro compact-intro">
+        <span className="eyebrow">Exercise library</span>
+        <h1>Pick a starting point.</h1>
+        <p>Two models, ready to inspect and change. Samples work without an AI connection.</p>
       </div>
       <div className="library-heading">
         <h2>Ready to explore</h2>
@@ -36,7 +29,10 @@ export default function Samples() {
           <div className="exercise-body">
             <span className="eyebrow">PROJECTILE MOTION</span>
             <h2>A ball in flight</h2>
-            <p>Launch at 20 m/s and 45°. Explore how speed and angle shape the journey.</p>
+            <p>
+              Launch at 20 m/s and 45°. Inspect the flight, compare gravity, and follow its
+              velocity.
+            </p>
             <div className="exercise-equation">R = v² sin(2θ) / g</div>
             <span className="exercise-cta">
               Explore this exercise <Icon name="arrow" />

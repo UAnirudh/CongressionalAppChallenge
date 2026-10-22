@@ -31,7 +31,11 @@ export function ProblemInput({
         const image = data.get('image');
         const text = String(data.get('text') || '');
         if (!text.trim() && (!(image instanceof File) || !image.size)) {
-          setMessage('Type a problem or choose an image.');
+          setMessage(
+            provider.supportsImages
+              ? 'Type a problem or choose an image.'
+              : 'Type a problem to continue.',
+          );
           return;
         }
         if (
@@ -89,37 +93,30 @@ export function ProblemInput({
           maxLength={MAX_TEXT_LENGTH}
           placeholder="A ball is launched at 20 m/s at 45 degrees from level ground…"
         />
-        <div className="upload-field">
-          <Icon name="upload" />
-          <label htmlFor="problem-image">
-            <strong>
-              {provider.supportsImages
-                ? fileName || 'Or upload a problem image'
-                : 'Image input unavailable with GPT-OSS'}
-            </strong>
-            <span>
-              {provider.supportsImages
-                ? 'PNG, JPG or WebP · Up to 2 MB'
-                : 'Use a typed problem or a sample exercise'}
-            </span>
-          </label>
-          <input
-            ref={imageInput}
-            disabled={!provider.supportsImages}
-            id="problem-image"
-            name="image"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            aria-label="Or upload a problem image"
-            onChange={(e) => {
-              setHasImage(Boolean(e.target.files?.[0]?.size));
-              setFileName(e.target.files?.[0]?.name ?? '');
-              setImageRevision((value) => value + 1);
-              setMessage('');
-            }}
-            aria-describedby="upload-note"
-          />
-        </div>
+        {provider.supportsImages && (
+          <div className="upload-field">
+            <Icon name="upload" />
+            <label htmlFor="problem-image">
+              <strong>{fileName || 'Or upload a problem image'}</strong>
+              <span>PNG, JPG or WebP · Up to 2 MB</span>
+            </label>
+            <input
+              ref={imageInput}
+              id="problem-image"
+              name="image"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              aria-label="Or upload a problem image"
+              onChange={(e) => {
+                setHasImage(Boolean(e.target.files?.[0]?.size));
+                setFileName(e.target.files?.[0]?.name ?? '');
+                setImageRevision((value) => value + 1);
+                setMessage('');
+              }}
+              aria-describedby="upload-note"
+            />
+          </div>
+        )}
         {!provider.supportsImages && (
           <p className="note image-unavailable">
             GPT-OSS on {provider.name} reads text only. Type or paste your problem above.
@@ -142,7 +139,8 @@ export function ProblemInput({
         <p id="upload-note" className="note">
           {provider.supportsImages ? 'Text and images are' : 'Problem text is'} sent to{' '}
           {provider.name}, subject to provider retention policies. We don’t permanently store them.
-          Remove personal information first. Still images only, up to 16 megapixels.
+          Remove personal information first.
+          {provider.supportsImages && ' Still images only, up to 16 megapixels.'}
         </p>
         {hasImage && (
           <label className="consent" key={imageRevision}>
