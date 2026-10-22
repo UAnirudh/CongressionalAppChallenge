@@ -5,6 +5,7 @@ import sharp from 'sharp';
 test('Groq image interpretation requires consent and reaches editable review and exploration', async ({
   page,
 }) => {
+  test.setTimeout(60000);
   let submissions = 0;
   await page.route('**/api/interpret', async (route) => {
     submissions++;

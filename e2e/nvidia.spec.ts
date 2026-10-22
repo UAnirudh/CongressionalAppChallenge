@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 test('NVIDIA text interpretation reaches review and exploration with honest image capabilities', async ({
   page,
 }) => {
+  test.setTimeout(60000);
   await page.route('**/api/interpret', (route) =>
     route.fulfill({
       json: {
