@@ -1,8 +1,19 @@
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google';
 import { AppShell } from '@/components/app-shell';
 import './globals.css';
-const geist = Geist({ subsets: ['latin'], display: 'swap', variable: '--font-geist' });
+const sans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  variable: '--font-sans',
+});
+const mono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  display: 'swap',
+  variable: '--font-mono',
+});
 export const metadata: Metadata = {
   title: 'ConceptLens | Explore the equation',
   description:
@@ -10,7 +21,7 @@ export const metadata: Metadata = {
 };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={geist.variable}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body>
         <AppShell>{children}</AppShell>
       </body>

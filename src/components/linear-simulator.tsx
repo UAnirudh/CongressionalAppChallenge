@@ -1,18 +1,16 @@
 'use client';
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ReferenceLine,
-} from 'recharts';
-import { linearValue } from '@/lib/math';
-import type { Linear } from '@/lib/models';
 import { useState } from 'react';
-import { Icon } from './icon';
+import { linearIntercept, linearValue } from '@/lib/math';
+import type { Linear } from '@/lib/models';
+import { ExplorerGraph, type GraphSeries } from './explorer-graph';
+import {
+  DataTable,
+  NumberControl,
+  ViewTabs,
+  downloadCsv,
+  formatNumber as fmt,
+} from './explorer-ui';
+import { Button } from './ui/button';
 
 export function LinearSimulator({
   model,
@@ -23,164 +21,193 @@ export function LinearSimulator({
   onChange: (model: Linear) => void;
   hideResults: boolean;
 }) {
-  const [slope, setSlope] = useState(String(model.slope));
-  const [intercept, setIntercept] = useState(String(model.intercept));
-  const validSlope =
-    slope.trim() !== '' && Number.isFinite(Number(slope)) && Math.abs(Number(slope)) <= 100;
-  const validIntercept =
-    intercept.trim() !== '' &&
-    Number.isFinite(Number(intercept)) &&
-    Math.abs(Number(intercept)) <= 1000;
-  const data = Array.from({ length: 21 }, (_, i) => ({ x: i - 10, y: linearValue(model, i - 10) }));
+  const [view, setView] = useState<'graph' | 'table'>('graph');
+  const [extent, setExtent] = useState(10);
+  const [inspect, setInspect] = useState(3);
+  const [baseline, setBaseline] = useState<Linear | null>(null);
+  const data = Array.from({ length: 101 }, (_, i) => {
+    const x = -extent + (i * extent) / 50;
+    return { x, y: linearValue(model, x) };
+  });
+  const selected = { x: inspect, y: linearValue(model, inspect) };
+  const intercept = linearIntercept(model);
+  const series: GraphSeries[] = [{ name: 'Current function', points: data }];
+  if (baseline)
+    series.push({
+      name: 'Saved function',
+      secondary: true,
+      points: data.map((p) => ({ x: p.x, y: linearValue(baseline, p.x) })),
+    });
+  const equation = `y = ${model.slope}x ${model.intercept < 0 ? '−' : '+'} ${Math.abs(model.intercept)}`;
   return (
     <section aria-labelledby="simulation-heading">
       <div className="simulation-title">
         <div>
+          <span className="eyebrow">Mathematics / experiment 02</span>
           <h2 id="simulation-heading" tabIndex={-1}>
             Linear function
           </h2>
-          <p>A small change. A different perspective.</p>
+          <p>Inspect coordinates and see exactly what the slope changes.</p>
         </div>
-        <span className="subject-tag">MATHEMATICS</span>
+        <span className="equation-chip">{equation}</span>
       </div>
       <div className="simulation-grid">
         <div className="visualization">
-          <div className="plot-heading">
-            <span>
-              <span className="art-live-dot" />
-              Your function
-            </span>
-            <span>
-              y = {model.slope}x {model.intercept < 0 ? '−' : '+'} {Math.abs(model.intercept)}
-            </span>
-          </div>
-          <div
-            className="plot linear-plot"
-            role="img"
-            aria-label={
-              hideResults
-                ? 'Graph hidden during prediction'
-                : `Linear graph with slope ${model.slope} and y intercept ${model.intercept}. At x zero, y is ${model.intercept}.`
-            }
-          >
-            {hideResults ? (
-              <div className="hidden-plot">
-                <Icon name="target" />
-                <p>Make your prediction to reveal the graph.</p>
-                <span>A little reasoning before the reveal.</span>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={data} margin={{ top: 26, right: 24, bottom: 20, left: 0 }}>
-                  <CartesianGrid stroke="var(--plot-grid)" strokeDasharray="3 4" />
-                  <XAxis
-                    dataKey="x"
-                    type="number"
-                    domain={[-10, 10]}
-                    tickLine={false}
-                    axisLine={false}
-                    label={{ value: 'x (unitless)', position: 'insideBottom', offset: -10 }}
-                  />
-                  <YAxis width={65} tickLine={false} axisLine={false} />
-                  <ReferenceLine x={0} stroke="var(--plot-axis)" />
-                  <ReferenceLine y={0} stroke="var(--plot-axis)" />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 10,
-                      border: '1px solid var(--border)',
-                      fontSize: 13,
-                    }}
-                  />
-                  <Line
-                    type="linear"
-                    dataKey="y"
-                    stroke="var(--green)"
-                    strokeWidth={3}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+          <div className="explorer-topline">
+            <ViewTabs
+              id="linear"
+              value={view}
+              options={[
+                { value: 'graph', label: 'Graph' },
+                { value: 'table', label: 'Data' },
+              ]}
+              onChange={setView}
+            />
+            {!hideResults && (
+              <button
+                className="text-action"
+                onClick={() =>
+                  downloadCsv(
+                    'conceptlens-linear.csv',
+                    ['x_unitless', 'y_unitless'],
+                    data.map((p) => [p.x, p.y]),
+                  )
+                }
+              >
+                Export CSV ↗
+              </button>
             )}
           </div>
-          <p className="plot-caption">
-            Graph window: −10 ≤ x ≤ 10. Both axes are unitless. The y axis rescales automatically.
-          </p>
+          <div id="linear-panel" role="tabpanel" aria-labelledby={`linear-${view}`} tabIndex={0}>
+            {hideResults ? (
+              <div className="hidden-plot">
+                <p>Make your prediction to reveal the graph.</p>
+                <span>The inspector and data are hidden too.</span>
+              </div>
+            ) : view === 'table' ? (
+              <DataTable
+                caption="Function data · 11 evenly spaced x values"
+                headers={['x', 'y = mx + b', 'Change from previous y']}
+                rows={Array.from({ length: 11 }, (_, i) => {
+                  const x = -extent + (i * extent) / 5;
+                  return [
+                    fmt(x),
+                    fmt(linearValue(model, x)),
+                    i ? fmt((model.slope * extent) / 5) : '—',
+                  ];
+                })}
+              />
+            ) : (
+              <ExplorerGraph
+                series={series}
+                xLabel="x (unitless)"
+                yLabel="y (unitless)"
+                selected={selected}
+                onInspect={(i) => setInspect(data[i].x)}
+                description={`Linear graph with slope ${model.slope} and y intercept ${model.intercept}. At x zero, y is ${model.intercept}.`}
+              />
+            )}
+          </div>
           {!hideResults && (
-            <dl className="metrics linear-metrics">
-              <div>
-                <dt>Slope · m</dt>
-                <dd>{model.slope}</dd>
+            <>
+              <div className="linear-inspector">
+                <NumberControl
+                  label="Inspect x"
+                  value={inspect}
+                  min={-1000}
+                  max={1000}
+                  onChange={setInspect}
+                />
+                <span className="inspect-result">
+                  f({fmt(inspect)}) = <strong>{fmt(selected.y)}</strong>
+                </span>
               </div>
-              <div>
-                <dt>Y-intercept · b</dt>
-                <dd>{model.intercept}</dd>
-              </div>
-              <div>
-                <dt>Relationship</dt>
-                <dd className="relationship-value">
-                  {model.slope > 0 ? 'Increasing' : model.slope < 0 ? 'Decreasing' : 'Constant'}
-                </dd>
-              </div>
-            </dl>
+              <dl className="metrics">
+                <div>
+                  <dt>Slope · m</dt>
+                  <dd>{model.slope}</dd>
+                </div>
+                <div>
+                  <dt>Y-intercept · b</dt>
+                  <dd>{model.intercept}</dd>
+                </div>
+                <div>
+                  <dt>X-intercept</dt>
+                  <dd>
+                    {intercept !== null
+                      ? fmt(intercept)
+                      : model.intercept === 0
+                        ? 'Every x'
+                        : 'None'}
+                  </dd>
+                </div>
+              </dl>
+              <p className="insight-line">
+                {model.slope === 0
+                  ? `This is a constant function: every x gives y = ${model.intercept}.`
+                  : `For every +1 in x, y ${model.slope > 0 ? 'increases' : 'decreases'} by ${Math.abs(model.slope)}. The line crosses the y axis at (0, ${model.intercept}).`}
+              </p>
+              {baseline && (
+                <p className="comparison-note">
+                  Saved: y = {baseline.slope}x + ({baseline.intercept}). At x = {fmt(inspect)}, the
+                  current y differs by {fmt(selected.y - linearValue(baseline, inspect))}. The
+                  dashed line stays fixed while you edit.
+                </p>
+              )}
+            </>
           )}
         </div>
-        <div className="variable-panel">
-          <span className="eyebrow">
-            <Icon name="sliders" />
-            THE VARIABLES
-          </span>
-          <h3>Find the pattern.</h3>
-          <p className="note">Change a value. Follow the line.</p>
-          <div className="fields linear-fields">
-            <label>
-              Slope
-              <input
-                type="number"
-                min="-100"
-                max="100"
-                step="any"
-                value={slope}
-                aria-invalid={!validSlope}
-                aria-describedby="linear-input-note"
-                onChange={(e) => {
-                  setSlope(e.target.value);
-                  if (e.target.value !== '' && e.target.validity.valid)
-                    onChange({ ...model, slope: Number(e.target.value) });
-                }}
-              />
-            </label>
-            <label>
-              Intercept
-              <input
-                type="number"
-                min="-1000"
-                max="1000"
-                step="any"
-                value={intercept}
-                aria-invalid={!validIntercept}
-                aria-describedby="linear-input-note"
-                onChange={(e) => {
-                  setIntercept(e.target.value);
-                  if (e.target.value !== '' && e.target.validity.valid)
-                    onChange({ ...model, intercept: Number(e.target.value) });
-                }}
-              />
-            </label>
+        <aside className="variable-panel" aria-label="Function controls">
+          <h3>The equation</h3>
+          <p className="large-equation">y = mx + b</p>
+          <NumberControl
+            label="Slope"
+            value={model.slope}
+            min={-100}
+            max={100}
+            onChange={(slope) => onChange({ ...model, slope })}
+          />
+          <NumberControl
+            label="Intercept"
+            value={model.intercept}
+            min={-1000}
+            max={1000}
+            onChange={(intercept) => onChange({ ...model, intercept })}
+          />
+          <NumberControl
+            label="X window (±)"
+            value={extent}
+            min={1}
+            max={1000}
+            onChange={setExtent}
+          />
+          <div className="comparison-control">
+            <Button
+              variant="outline"
+              disabled={hideResults}
+              onClick={() => setBaseline({ ...model })}
+            >
+              {baseline ? 'Replace saved function' : 'Save comparison'}
+            </Button>
+            {baseline && (
+              <button className="text-action" onClick={() => setBaseline(null)}>
+                Clear comparison
+              </button>
+            )}
           </div>
-          <p id="linear-input-note" className="note" role="status">
-            {!validSlope || !validIntercept
-              ? 'Enter a slope from −100 to 100 and an intercept from −1000 to 1000. The graph keeps the last valid values.'
-              : 'Change either value to update the graph.'}
-          </p>
-          <div className="formula-note">
-            <span>THE RELATIONSHIP</span>
-            <p>y = mx + b</p>
-          </div>
+          <details className="explanation" open>
+            <summary>Read the slope</summary>
+            <p>
+              m is the change in y for one unit of x. A negative m falls from left to right; m = 0
+              is horizontal. Changing b shifts the entire line up or down without changing its
+              slope.
+            </p>
+          </details>
           <p className="note">
-            The slope sets the direction. The intercept sets where the line meets the y axis.
+            Both axes are unitless. The y axis fits your values; visual angle depends on the graph
+            window.
           </p>
-        </div>
+        </aside>
       </div>
     </section>
   );
