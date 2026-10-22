@@ -1,5 +1,42 @@
 import { expect, it } from 'vitest';
-import { providerConfig, providerInfo, selectedProvider } from '../src/lib/provider';
+import {
+  imageProviderConfig,
+  providerConfig,
+  providerInfo,
+  selectedProvider,
+} from '../src/lib/provider';
+
+it('adds Groq vision without changing the text provider or exposing either key', () => {
+  const env = {
+    NVIDIA_API_KEY: 'nvidia-private',
+    NVIDIA_MODEL: 'openai/gpt-oss-20b',
+    GROQ_API_KEY: 'groq-private',
+  };
+  expect(providerConfig(env).provider).toBe('nvidia');
+  expect(imageProviderConfig(env)).toEqual({
+    provider: 'groq',
+    key: 'groq-private',
+    model: 'qwen/qwen3.8-27b',
+  });
+  expect(providerInfo(env)).toEqual({
+    name: 'NVIDIA',
+    supportsImages: true,
+    imageProviderName: 'Groq (Qwen 3.8)',
+  });
+  expect(JSON.stringify(providerInfo(env))).not.toContain('private');
+});
+
+it('validates the vision model and never borrows another provider key', () => {
+  expect(() =>
+    imageProviderConfig({ GROQ_MODEL: 'qwen/qwen3.8-27b', OPENAI_API_KEY: 'other' }),
+  ).toThrow('Groq image interpretation is not configured');
+  expect(() =>
+    imageProviderConfig({ GROQ_API_KEY: 'test', GROQ_MODEL: 'text-only-model' }),
+  ).toThrow('GROQ_MODEL');
+  expect(
+    imageProviderConfig({ OPENAI_API_KEY: 'test', OPENAI_MODEL: 'vision-model' }).provider,
+  ).toBe('openai');
+});
 
 it('selects NVIDIA explicitly or from its own key without borrowing OpenAI credentials', () => {
   expect(selectedProvider({ NVIDIA_API_KEY: 'private-nvidia' })).toBe('nvidia');

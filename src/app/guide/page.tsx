@@ -88,9 +88,10 @@ export default function Guide() {
           </p>
           <p>
             When you choose “Interpret problem,” your problem is sent to the provider named on the
-            input form: NVIDIA or OpenAI. This app does not permanently store it; provider retention
-            policies apply. GPT-OSS on NVIDIA accepts text only. Image-capable OpenAI models require
-            your explicit agreement before image submission.
+            input form: NVIDIA, Groq, or OpenAI. This app does not permanently store it; provider
+            retention policies apply. With Groq vision enabled, images and accompanying text go to
+            Qwen on Groq, while typed problems still go to your text provider. Image submission
+            requires your explicit agreement each time you choose a new image.
           </p>
           <p>
             Remove names, school details, and other personal information before uploading. Images

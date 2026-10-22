@@ -40,11 +40,12 @@ export function ProblemInput({
         }
         if (
           image instanceof File &&
-          image.size &&
-          (image.size > MAX_IMAGE_BYTES ||
+          (image.name || image.size) &&
+          (!image.size ||
+            image.size > MAX_IMAGE_BYTES ||
             !['image/png', 'image/jpeg', 'image/webp'].includes(image.type))
         ) {
-          setMessage('Use a PNG, JPEG, or WebP image no larger than 2 MB.');
+          setMessage('Use a nonempty PNG, JPEG, or WebP image no larger than 2 MB.');
           return;
         }
         setPending(true);
@@ -98,7 +99,7 @@ export function ProblemInput({
             <Icon name="upload" />
             <label htmlFor="problem-image">
               <strong>{fileName || 'Or upload a problem image'}</strong>
-              <span>PNG, JPG or WebP · Up to 2 MB</span>
+              <span>Photo, screenshot or diagram · PNG, JPG or WebP · Up to 2 MB</span>
             </label>
             <input
               ref={imageInput}
@@ -108,7 +109,7 @@ export function ProblemInput({
               accept="image/png,image/jpeg,image/webp"
               aria-label="Or upload a problem image"
               onChange={(e) => {
-                setHasImage(Boolean(e.target.files?.[0]?.size));
+                setHasImage(Boolean(e.target.files?.[0]?.name || e.target.files?.[0]?.size));
                 setFileName(e.target.files?.[0]?.name ?? '');
                 setImageRevision((value) => value + 1);
                 setMessage('');
@@ -137,15 +138,18 @@ export function ProblemInput({
           </button>
         )}
         <p id="upload-note" className="note">
-          {provider.supportsImages ? 'Text and images are' : 'Problem text is'} sent to{' '}
-          {provider.name}, subject to provider retention policies. We don’t permanently store them.
-          Remove personal information first.
+          {provider.imageProviderName
+            ? `Typed problems are sent to ${provider.name}. Images and accompanying text are sent to ${provider.imageProviderName}.`
+            : `${provider.supportsImages ? 'Text and images are' : 'Problem text is'} sent to ${provider.name}.`}{' '}
+          Provider retention policies apply. We don’t permanently store them. Remove personal
+          information first.
           {provider.supportsImages && ' Still images only, up to 16 megapixels.'}
         </p>
         {hasImage && (
           <label className="consent" key={imageRevision}>
             <input name="imageConsent" value="yes" type="checkbox" required /> I agree to send this
-            image to the AI provider for interpretation.
+            image and accompanying text to {provider.imageProviderName || provider.name} for
+            interpretation.
           </label>
         )}
         <Button className="interpret-button" type="submit" disabled={pending}>

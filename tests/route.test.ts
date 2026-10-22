@@ -5,6 +5,8 @@ import sharp from 'sharp';
 beforeEach(() => {
   vi.stubEnv('AI_PROVIDER', 'openai');
   vi.stubEnv('NVIDIA_API_KEY', '');
+  vi.stubEnv('GROQ_API_KEY', '');
+  vi.stubEnv('GROQ_MODEL', '');
 });
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -15,6 +17,48 @@ function request(text: string) {
   form.set('text', text);
   return new Request('http://localhost/api/interpret', { method: 'POST', body: form });
 }
+
+it('routes approved images to Groq, keeps typed problems on NVIDIA, and fails closed on missing vision credentials', async () => {
+  vi.stubEnv('AI_PROVIDER', 'nvidia');
+  vi.stubEnv('NVIDIA_API_KEY', 'nvidia-test');
+  vi.stubEnv('NVIDIA_MODEL', 'openai/gpt-oss-20b');
+  vi.stubEnv('GROQ_API_KEY', 'groq-test');
+  const fetcher = vi.fn().mockImplementation(
+    async () =>
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              finish_reason: 'stop',
+              message: { content: JSON.stringify({ status: 'supported', problem: samples[1] }) },
+            },
+          ],
+        }),
+      ),
+  );
+  vi.stubGlobal('fetch', fetcher);
+  const png = await sharp({ create: { width: 2, height: 2, channels: 3, background: 'white' } })
+    .png()
+    .toBuffer();
+  const form = new FormData();
+  form.set('text', 'Please read the image.');
+  form.set('image', new File([new Uint8Array(png)], 'problem.png', { type: 'image/png' }));
+  const imageRequest = () =>
+    new Request('http://localhost/api/interpret', { method: 'POST', body: form });
+  expect((await POST(imageRequest())).status).toBe(400);
+  expect(fetcher).not.toHaveBeenCalled();
+  form.set('imageConsent', 'yes');
+  expect((await POST(imageRequest())).status).toBe(200);
+  expect(fetcher.mock.calls[0][0]).toBe('https://api.groq.com/openai/v1/chat/completions');
+  expect(fetcher.mock.calls[0][1].headers.Authorization).toBe('Bearer groq-test');
+  expect((await POST(request('y=2x+1'))).status).toBe(200);
+  expect(fetcher.mock.calls[1][0]).toBe('https://integrate.api.nvidia.com/v1/chat/completions');
+  expect(fetcher.mock.calls[1][1].headers.Authorization).toBe('Bearer nvidia-test');
+  vi.stubEnv('GROQ_API_KEY', '');
+  vi.stubEnv('GROQ_MODEL', 'qwen/qwen3.8-27b');
+  expect((await POST(imageRequest())).status).toBe(503);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});
 it('routes configured NVIDIA requests through GPT-OSS and never falls back to OpenAI', async () => {
   vi.stubEnv('AI_PROVIDER', 'nvidia');
   vi.stubEnv('NVIDIA_API_KEY', 'test-nvidia');
@@ -60,6 +104,20 @@ it('rejects valid images with an actionable error when NVIDIA is selected', asyn
   expect((await response.json()).error).toContain('text only');
   expect(fetcher).not.toHaveBeenCalled();
 });
+it('rejects a named empty image instead of silently treating it as a typed request', async () => {
+  vi.stubEnv('GROQ_API_KEY', 'test');
+  const fetcher = vi.fn();
+  vi.stubGlobal('fetch', fetcher);
+  const form = new FormData();
+  form.set('text', 'y=2x+1');
+  form.set('imageConsent', 'yes');
+  form.set('image', new File([], 'empty.png', { type: 'image/png' }));
+  const response = await POST(new Request('http://localhost', { method: 'POST', body: form }));
+  expect(response.status).toBe(400);
+  expect((await response.json()).error).toContain('nonempty');
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
 it('rejects empty input and incorrect request encoding', async () => {
   expect((await POST(request(''))).status).toBe(400);
   expect((await POST(new Request('http://localhost', { method: 'POST', body: '{}' }))).status).toBe(

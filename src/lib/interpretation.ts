@@ -90,6 +90,7 @@ export async function interpret(
   fetcher: typeof fetch = fetch,
 ) {
   const nvidia = config.provider === 'nvidia';
+  const groq = config.provider === 'groq';
   if (nvidia && input.image)
     throw new InterpretationError(
       'GPT-OSS on NVIDIA supports text only. Paste or type the problem instead of uploading an image.',
@@ -110,7 +111,9 @@ export async function interpret(
     response = await fetcher(
       nvidia
         ? 'https://integrate.api.nvidia.com/v1/chat/completions'
-        : 'https://api.openai.com/v1/chat/completions',
+        : groq
+          ? 'https://api.groq.com/openai/v1/chat/completions'
+          : 'https://api.openai.com/v1/chat/completions',
       {
         method: 'POST',
         headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
@@ -118,17 +121,27 @@ export async function interpret(
           model: config.model,
           ...(nvidia
             ? { max_tokens: 4096, reasoning_effort: 'low', stream: false }
-            : {
-                store: false,
-                response_format: { type: 'json_object' },
-                max_completion_tokens: 1600,
-              }),
+            : groq
+              ? {
+                  temperature: 0.6,
+                  top_p: 0.95,
+                  max_completion_tokens: 4096,
+                  reasoning_effort: 'default',
+                  reasoning_format: 'hidden',
+                  stream: false,
+                  response_format: { type: 'json_object' },
+                }
+              : {
+                  store: false,
+                  response_format: { type: 'json_object' },
+                  max_completion_tokens: 1600,
+                }),
           messages: [
             { role: 'system', content: instructions },
             { role: 'user', content: nvidia ? input.text : content },
           ],
         }),
-        signal: AbortSignal.timeout(nvidia ? 45000 : 25000),
+        signal: AbortSignal.timeout(nvidia || groq ? 45000 : 25000),
         cache: 'no-store',
       },
     );
@@ -156,7 +169,7 @@ export async function interpret(
   try {
     const data = await response.json();
     if (data.choices?.[0]?.finish_reason !== 'stop') throw new Error('Incomplete interpretation');
-    // GPT-OSS reasoning is separate from final content. Never parse or return reasoning_content.
+    // Only the final answer is model data. Never parse or return provider reasoning fields.
     const text = data.choices[0].message.content;
     if (typeof text !== 'string') throw new Error('Missing final answer');
     const json = text.trim().replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i, '$1');

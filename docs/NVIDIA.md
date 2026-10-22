@@ -20,9 +20,9 @@ NVIDIA calls have a 45-second deadline, the route allows 60 seconds, and the cli
 
 ## Images
 
-Both GPT-OSS models are text-only. In NVIDIA mode, upload is disabled with an explanation. Direct image submissions receive a 422 response before provider transmission. To support photos with this model later, add a separately disclosed OCR or vision stage and let students review the extracted text. No OCR or alternate vision provider is implied by this integration.
+Both GPT-OSS models are text-only. When `GROQ_API_KEY` is configured, approved images and accompanying text use the separately disclosed Groq Qwen vision adapter. Typed problems still use NVIDIA. See [vision architecture](VISION.md).
 
-Explicit `AI_PROVIDER=openai` retains the existing image-capable adapter and consent flow. Request formats, credentials, and public capability descriptions remain separate.
+Without a Groq configuration, NVIDIA mode hides image upload and direct image submissions receive a 422 response before provider transmission. Explicit `AI_PROVIDER=openai` retains the original image-capable adapter when Groq is not configured. Each adapter uses its own credentials, request options, and capability disclosure.
 
 ## Verification
 
