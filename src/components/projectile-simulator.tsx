@@ -24,25 +24,28 @@ export function ProjectileSimulator({
   model,
   onChange,
   hideResults,
+  paused = false,
 }: {
   model: Projectile;
   onChange: (model: Projectile) => void;
   hideResults: boolean;
+  paused?: boolean;
 }) {
   const [view, setView] = useState<View>('trajectory');
   const [progress, setProgress] = useState(0.5);
   const [playing, setPlaying] = useState(false);
   const [baseline, setBaseline] = useState<Projectile | null>(null);
+  const [gravityPresetRevision, setGravityPresetRevision] = useState(0);
   const result = projectile(model),
     data = projectileTable(model);
   const current = projectileState(model, progress * result.flightTime);
   const comparison = baseline ? projectileTable(baseline) : null;
   const finished = progress >= 1;
   useEffect(() => {
-    if (!playing || hideResults || result.flightTime === 0 || finished) return;
+    if (!playing || hideResults || paused || result.flightTime === 0 || finished) return;
     const timer = setInterval(() => setProgress((value) => Math.min(1, value + 0.01)), 50);
     return () => clearInterval(timer);
-  }, [playing, hideResults, result.flightTime, finished]);
+  }, [playing, hideResults, paused, result.flightTime, finished]);
   const project = (row: typeof current) =>
     view === 'trajectory'
       ? { x: row.x, y: row.y }
@@ -56,7 +59,7 @@ export function ProjectileSimulator({
   if (view === 'velocity')
     series.push({
       name: 'Horizontal velocity',
-      secondary: true,
+      auxiliary: true,
       points: data.map((row) => ({ x: row.t, y: row.vx })),
     });
   if (comparison)
@@ -111,10 +114,14 @@ export function ProjectileSimulator({
                 yLabel={view === 'velocity' ? 'Velocity (m/s)' : 'Height (m)'}
                 selected={project(current)}
                 equalScale={view === 'trajectory'}
-                onInspect={(i) => {
-                  setPlaying(false);
-                  setProgress(i / 80);
-                }}
+                onInspect={
+                  paused
+                    ? undefined
+                    : (i) => {
+                        setPlaying(false);
+                        setProgress(i / 80);
+                      }
+                }
                 description={`Trajectory: range ${result.range.toFixed(2)} meters and peak ${result.maxHeight.toFixed(2)} meters. ${view === 'trajectory' ? 'Equal distance scales on both axes.' : view + ' over time.'}`}
               />
             )}
@@ -229,6 +236,7 @@ export function ProjectileSimulator({
             </div>
           ))}
           <NumberControl
+            key={gravityPresetRevision}
             label="Gravity (m/s²)"
             value={model.gravity}
             min={0.1}
@@ -244,7 +252,10 @@ export function ProjectileSimulator({
               <button
                 key={label}
                 aria-pressed={model.gravity === gravity}
-                onClick={() => onChange({ ...model, gravity: Number(gravity) })}
+                onClick={() => {
+                  setGravityPresetRevision((n) => n + 1);
+                  onChange({ ...model, gravity: Number(gravity) });
+                }}
               >
                 {label}
               </button>

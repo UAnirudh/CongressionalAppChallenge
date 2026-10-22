@@ -184,12 +184,14 @@ export function ProblemWorkbench({
                   model={model}
                   onChange={change}
                   hideResults={predicting && !revealed}
+                  paused={busy}
                 />
               ) : (
                 <LinearSimulator
                   model={model}
                   onChange={change}
                   hideResults={predicting && !revealed}
+                  paused={busy}
                 />
               )}
               {predicting && (

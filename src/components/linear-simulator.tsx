@@ -16,10 +16,12 @@ export function LinearSimulator({
   model,
   onChange,
   hideResults,
+  paused = false,
 }: {
   model: Linear;
   onChange: (model: Linear) => void;
   hideResults: boolean;
+  paused?: boolean;
 }) {
   const [view, setView] = useState<'graph' | 'table'>('graph');
   const [extent, setExtent] = useState(10);
@@ -103,7 +105,7 @@ export function LinearSimulator({
                 xLabel="x (unitless)"
                 yLabel="y (unitless)"
                 selected={selected}
-                onInspect={(i) => setInspect(data[i].x)}
+                onInspect={paused ? undefined : (i) => setInspect(data[i].x)}
                 description={`Linear graph with slope ${model.slope} and y intercept ${model.intercept}. At x zero, y is ${model.intercept}.`}
               />
             )}
@@ -133,12 +135,14 @@ export function LinearSimulator({
                 </div>
                 <div>
                   <dt>X-intercept</dt>
-                  <dd>
-                    {intercept !== null
-                      ? fmt(intercept)
-                      : model.intercept === 0
-                        ? 'Every x'
-                        : 'None'}
+                  <dd className={intercept === undefined ? 'numeric-limit' : undefined}>
+                    {intercept === undefined
+                      ? 'Outside numeric range'
+                      : intercept !== null
+                        ? fmt(intercept)
+                        : model.intercept === 0
+                          ? 'Every x'
+                          : 'None'}
                   </dd>
                 </div>
               </dl>

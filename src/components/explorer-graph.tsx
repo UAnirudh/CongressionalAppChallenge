@@ -3,7 +3,12 @@ import { useId, useState } from 'react';
 import { formatNumber } from './explorer-ui';
 
 type Point = { x: number; y: number };
-export type GraphSeries = { name: string; points: Point[]; secondary?: boolean };
+export type GraphSeries = {
+  name: string;
+  points: Point[];
+  secondary?: boolean;
+  auxiliary?: boolean;
+};
 
 export function ExplorerGraph({
   series,
@@ -125,7 +130,13 @@ export function ExplorerGraph({
             <path
               key={s.name}
               d={path(s.points)}
-              className={s.secondary ? 'graph-line secondary' : 'graph-line'}
+              className={
+                s.secondary
+                  ? 'graph-line secondary'
+                  : s.auxiliary
+                    ? 'graph-line auxiliary'
+                    : 'graph-line'
+              }
             />
           ))}
           {selected && (
@@ -149,7 +160,7 @@ export function ExplorerGraph({
       <div className="graph-legend">
         {series.map((s) => (
           <span key={s.name}>
-            <i className={s.secondary ? 'secondary' : ''} />
+            <i className={s.secondary ? 'secondary' : s.auxiliary ? 'auxiliary' : ''} />
             {s.name}
           </span>
         ))}

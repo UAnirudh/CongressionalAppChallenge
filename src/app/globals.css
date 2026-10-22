@@ -3163,3 +3163,34 @@ textarea {
     font-size: 16px;
   }
 }
+.graph-line.auxiliary {
+  stroke: #62715b;
+  stroke-dasharray: 2 5;
+  stroke-width: 2;
+}
+.graph-legend i.auxiliary {
+  border-top: 2px dotted #62715b;
+}
+@media (forced-colors: active) {
+  .graph-line,
+  .graph-point {
+    stroke: CanvasText;
+  }
+  .graph-line.secondary {
+    stroke: LinkText;
+  }
+  .graph-line.auxiliary,
+  .graph-gridline,
+  .graph-zero,
+  .graph-crosshair {
+    stroke: GrayText;
+  }
+  .explorer-graph text {
+    fill: CanvasText;
+  }
+}
+.metrics dd.numeric-limit {
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}

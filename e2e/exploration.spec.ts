@@ -12,6 +12,9 @@ test('flight inspector, graph views, comparison, and CSV are usable', async ({ p
   await expect(inspector).toHaveValue('0.5');
   await expect(page.getByLabel('Inspected flight point')).toContainText('Vertical v0 m/s');
   await page.getByRole('button', { name: 'Save comparison' }).click();
+  await page.getByLabel('Gravity (m/s²)', { exact: true }).fill('');
+  await page.getByRole('button', { name: 'Earth', exact: true }).click();
+  await expect(page.getByLabel('Gravity (m/s²)', { exact: true })).toHaveValue('9.81');
   await page.getByRole('button', { name: 'Moon', exact: true }).click();
   await expect(page.getByLabel('Gravity (m/s²)', { exact: true })).toHaveValue('1.62');
   await expect(page.getByText(/Saved launch: 20 m\/s/)).toContainText('g = 9.81');
@@ -64,11 +67,52 @@ test('linear inspector, expanded domain, constants, and comparison stay accurate
   await page.getByLabel('Slope', { exact: true }).fill('');
   await expect(page.getByText(/graph keeps the last valid value/)).toBeVisible();
   await page.getByLabel('Slope', { exact: true }).fill('1');
+  await page.getByLabel('Slope', { exact: true }).fill('5e-324');
+  await page.getByLabel('Intercept', { exact: true }).fill('1000');
+  await expect(page.getByText('Outside numeric range', { exact: true })).toBeVisible();
+  await page.getByLabel('Slope', { exact: true }).fill('1');
   expect(
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
       .violations,
   ).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('pending interpretation freezes the current flight and recovers on failure', async ({
+  page,
+}) => {
+  let release!: () => void;
+  const waiting = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/interpret', async (route) => {
+    await waiting;
+    await route.fulfill({
+      status: 502,
+      json: { error: 'The interpretation service is unavailable.' },
+    });
+  });
+  await page.goto('/?sample=projectile');
+  await page.getByRole('button', { name: 'Confirm and explore' }).click();
+  await page.getByRole('button', { name: 'New problem', exact: true }).click();
+  await page.getByLabel('Type your math or physics problem').fill('A new launch problem');
+  await page.getByRole('button', { name: 'Play flight' }).click();
+  await page.getByRole('button', { name: 'Interpret problem' }).click();
+  const inspector = page.getByRole('slider', { name: 'Inspect time' });
+  await expect(inspector).toBeDisabled();
+  const frozen = await inspector.inputValue();
+  try {
+    // Observe four playback ticks: this is a temporal freeze assertion, not a readiness wait.
+    await page.waitForTimeout(200);
+    expect(await inspector.inputValue()).toBe(frozen);
+  } finally {
+    release();
+  }
+  await expect(page.getByText('The interpretation service is unavailable.')).toBeVisible();
+  await expect(inspector).toBeEnabled();
+  await expect
+    .poll(async () => Number(await inspector.inputValue()))
+    .toBeGreaterThan(Number(frozen));
 });
 
 test('flight playback, vertical launches and reduced motion remain controllable', async ({

@@ -85,4 +85,5 @@ it('distinguishes a finite x intercept from constant functions', () => {
   expect(linearIntercept({ ...linear, slope: -2, intercept: 8 })).toBe(4);
   expect(linearIntercept({ ...linear, slope: 0 })).toBeNull();
   expect(linearIntercept({ ...linear, slope: 0, intercept: 0 })).toBeNull();
+  expect(linearIntercept({ ...linear, slope: Number.MIN_VALUE, intercept: 1000 })).toBeUndefined();
 });

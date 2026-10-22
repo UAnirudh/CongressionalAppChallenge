@@ -58,7 +58,10 @@ export function projectileTable(input: Projectile, intervals = 80) {
 
 export function linearIntercept(input: Linear) {
   const { slope, intercept } = linearSchema.parse(input);
-  return slope === 0 ? null : -intercept / slope;
+  if (slope === 0) return null;
+  const x = -intercept / slope;
+  // Undefined distinguishes numeric overflow from a constant function's missing intercept.
+  return Number.isFinite(x) ? x : undefined;
 }
 export function prediction(problem: Problem) {
   return problem.type === 'projectile_motion'
