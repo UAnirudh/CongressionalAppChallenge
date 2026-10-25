@@ -1,6 +1,6 @@
 # ConceptLens
 
-A student-built conceptual STEM lab for the 2026 Congressional App Challenge. The MVP supports exactly **projectile motion** and **unitless linear functions**.
+A student-built conceptual STEM lab for the 2026 Congressional App Challenge. The AI learning lab supports **projectile motion** and **unitless linear functions**. The exercise library contains 42 guided problems across projectile motion, motion and speed, forces and energy, linear functions, quadratics, and exponential functions; these curated exercises work without AI credentials.
 
 ## Run locally
 
@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. Both sample exercises work without credentials. For AI interpretation, copy `.env.example` to `.env.local`, set `AI_PROVIDER=nvidia`, `NVIDIA_API_KEY`, and `NVIDIA_MODEL`, then restart. Supported NVIDIA model IDs are `nvidia/nemotron-3.5-super-vl-120b-a12b`, `openai/gpt-oss-20b`, and `openai/gpt-oss-120b`. Keys stay server-side; never prefix them with `NEXT_PUBLIC_`. Existing Vercel settings with `NVIDIA_API_KEY` and `NVIDIA_MODEL` work without adding `AI_PROVIDER`.
+Open http://localhost:3000. Both sample exercises work without credentials. For AI interpretation, copy `.env.example` to `.env.local`, set `AI_PROVIDER=nvidia`, `NVIDIA_API_KEY`, and `NVIDIA_MODEL`, then restart. Supported NVIDIA model IDs are `nvidia/nemotron-3.5-super-vl-120b-a12b`, `openai/gpt-oss-20b`, and `openai/gpt-oss-120b`. When Nemotron is selected, typed problem interpretation uses GPT-OSS 20B by default for lower latency; image interpretation keeps using Nemotron. Set optional `NVIDIA_TEXT_MODEL` to one of those three models to choose the typed-problem model. Keys stay server-side; never prefix them with `NEXT_PUBLIC_`. Existing Vercel settings with `NVIDIA_API_KEY` and `NVIDIA_MODEL` work without adding `AI_PROVIDER`.
 
 To add image interpretation alongside NVIDIA text, set `GROQ_API_KEY` in the server environment. Images use `qwen/qwen3.8-27b` by default; optional `GROQ_MODEL` must match that exact ID. Photos, screenshots, and diagrams of supported problems go directly to Groq after explicit consent, then through editable model review. Typed problems continue to use NVIDIA. Without a Groq configuration, NVIDIA GPT-OSS remains text-only and NVIDIA Nemotron retains its image adapter; explicit `AI_PROVIDER=openai` retains the original image-capable adapter. Failed provider calls never fall back to another service. See [the provider architecture](docs/NVIDIA.md) and [Groq vision setup](docs/VISION.md).
 
@@ -34,6 +34,7 @@ npm start
 2. Review the extracted parameters, units, and assumptions. Correct values before confirming.
 3. Adjust variables and compare the graph and measurements.
 4. Enter prediction mode. Results stay hidden until you check your answer. Changing a variable resets the prediction.
+5. In a dedicated problem tab, choose **Guided exploration** for four short steps based on the current model. Check calculations, unlock hints, or review a worked step. Finish by predicting and applying a parameter change, then compare the starting and changed graphs. The walkthrough works without another AI request; model changes outside it require a restart, and progress is temporary.
 
 `src/lib/models.ts` is the shared Zod contract. `src/lib/math.ts` contains only deterministic calculations and answer checking. The components never execute AI-generated code. `src/lib/interpretation.ts` sends problem data to the provider and validates its JSON; the server route validates incoming requests. A valid schema does not prove that AI read the question correctly, so image-derived models require review before exploration, and typed models remain editable in their dedicated tab.
 

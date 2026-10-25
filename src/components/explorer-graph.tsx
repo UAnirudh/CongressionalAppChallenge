@@ -18,6 +18,7 @@ export function ExplorerGraph({
   onInspect,
   equalScale = false,
   description,
+  legendHint = 'Hover or use the inspector below',
 }: {
   series: GraphSeries[];
   xLabel: string;
@@ -26,6 +27,7 @@ export function ExplorerGraph({
   onInspect?: (index: number) => void;
   equalScale?: boolean;
   description: string;
+  legendHint?: string | null;
 }) {
   const clip = useId();
   const [zoom, setZoom] = useState(1);
@@ -164,7 +166,7 @@ export function ExplorerGraph({
             {s.name}
           </span>
         ))}
-        <span className="graph-hint">Hover or use the inspector below</span>
+        {legendHint && <span className="graph-hint">{legendHint}</span>}
       </div>
     </div>
   );

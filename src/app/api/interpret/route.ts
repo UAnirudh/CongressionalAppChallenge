@@ -5,7 +5,7 @@ import {
   validateImage,
 } from '@/lib/interpretation';
 import { MAX_TEXT_LENGTH } from '@/lib/upload';
-import { imageProviderConfig, providerConfig } from '@/lib/provider';
+import { imageProviderConfig, interpretationProviderConfig } from '@/lib/provider';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       throw new InterpretationError('Type a problem or choose an image.', 400);
     let config;
     try {
-      config = image ? imageProviderConfig() : providerConfig();
+      config = image ? imageProviderConfig() : interpretationProviderConfig();
     } catch (error) {
       throw new InterpretationError(
         error instanceof Error ? error.message : 'AI interpretation is not configured.',

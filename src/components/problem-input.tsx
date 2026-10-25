@@ -20,6 +20,7 @@ export function ProblemInput({
   provider: ProviderInfo;
 }) {
   const [pending, setPending] = useState(false);
+  const [takingLonger, setTakingLonger] = useState(false);
   const [message, setMessage] = useState('');
   const [hasImage, setHasImage] = useState(false);
   const [fileName, setFileName] = useState('');
@@ -76,8 +77,10 @@ export function ProblemInput({
         };
 
         setPending(true);
+        setTakingLonger(false);
         onPending(true);
         setMessage('');
+        const slowNoticeTimer = window.setTimeout(() => setTakingLonger(true), 12000);
         try {
           const response = await fetch('/api/interpret', {
             method: 'POST',
@@ -120,11 +123,16 @@ export function ProblemInput({
           form.reset();
           setHasImage(false);
           setFileName('');
-        } catch {
-          const message = 'The server could not be reached in time. Try again or use a sample.';
+        } catch (error) {
+          const message =
+            error instanceof Error && error.name === 'TimeoutError'
+              ? 'The AI model took too long to interpret this problem. Try a shorter question or use a ready-made exercise.'
+              : 'The server could not be reached. Try again or use a ready-made exercise.';
           deliver(errorProblemHandoff(message));
           setMessage(message);
         } finally {
+          window.clearTimeout(slowNoticeTimer);
+          setTakingLonger(false);
           setPending(false);
           onPending(false);
         }
@@ -207,7 +215,12 @@ export function ProblemInput({
         role="status"
         className={message ? 'error form-message' : pending ? 'pending-message' : 'empty-status'}
       >
-        {message || (pending ? 'Reading your problem and preparing its dedicated tab…' : '')}
+        {message ||
+          (pending
+            ? takingLonger
+              ? 'Still reading your problem. The new tab will be ready as soon as the model finishes.'
+              : 'Reading your problem and preparing its dedicated tab…'
+            : '')}
       </p>
     </form>
   );

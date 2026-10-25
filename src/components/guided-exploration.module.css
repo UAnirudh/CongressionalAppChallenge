@@ -1,0 +1,424 @@
+.welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 35px;
+  padding: 15px 0;
+}
+
+.welcome h2 {
+  margin-top: 12px;
+  font-size: 27px;
+}
+
+.welcome p,
+.notice p,
+.completion > p {
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.previewSteps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 25px;
+  margin: 24px 0;
+  padding-left: 20px;
+  list-style: decimal;
+  font-size: 13px;
+}
+
+.previewSteps li::marker {
+  color: var(--accent);
+}
+
+.modelNote {
+  padding: 27px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.modelNote > svg {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 20px;
+  color: var(--accent);
+}
+
+.modelNote > span,
+.modelNote > strong {
+  display: block;
+}
+
+.modelNote > span,
+.stepLabel {
+  color: var(--accent-dark);
+  font-size: 11px;
+}
+
+.modelNote > strong {
+  margin-top: 9px;
+  font-family: var(--font-mono), monospace;
+  font-size: 17px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.smallNote,
+.welcome .smallNote {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.sessionTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progress li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-top: 12px;
+  border-top: 2px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.progress li[aria-current='step'] {
+  border-color: var(--accent);
+  color: var(--ink);
+  font-weight: 550;
+}
+
+.progress li[data-done='true'] {
+  border-color: #81959e;
+}
+
+.progress li > span {
+  display: grid;
+  flex: 0 0 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  font-size: 10px;
+}
+
+.progress li[aria-current='step'] > span {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.progress li > span > svg {
+  width: 15px;
+  height: 15px;
+}
+
+.sessionGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.stepCard,
+.graphCard {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.stepCard {
+  padding: 25px;
+}
+
+.stepCard h2 {
+  margin-top: 10px;
+  font-size: 23px;
+}
+
+.idea {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.question {
+  margin-top: 23px;
+  padding: 16px;
+  background: var(--surface-soft);
+  border-radius: 8px;
+}
+
+.question h3 {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.answerForm {
+  margin-top: 20px;
+}
+
+.answerForm > label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.answerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.answerRow > input {
+  width: 120px;
+  min-width: 0;
+  flex: 1 1 100px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.answerRow > button {
+  flex: 0 0 auto;
+}
+
+.feedback,
+.error {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.feedback:empty {
+  display: none;
+}
+
+.feedback {
+  color: #446376;
+}
+
+.error {
+  color: var(--accent-dark);
+}
+
+.hint {
+  margin-top: 12px;
+  padding: 13px 15px;
+  border-left: 2px solid #b7c9cf;
+  background: var(--surface-blue);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hint > strong {
+  display: block;
+  color: #446376;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.helpActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.working {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #d5dfe1;
+  border-radius: 10px;
+  background: var(--surface-blue);
+}
+
+.working ol {
+  margin: 13px 0 0;
+  padding-left: 19px;
+  list-style: decimal;
+}
+
+.working li {
+  padding-left: 4px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.working li + li {
+  margin-top: 7px;
+}
+
+.working p,
+.experiment p {
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.experiment {
+  margin-top: 18px;
+}
+
+.experiment > strong {
+  display: block;
+  font-size: 13px;
+}
+
+.experiment > button {
+  margin-top: 13px;
+}
+
+.navigation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.navigation > span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.graphCard {
+  padding: 22px 15px;
+}
+
+.graphHeading {
+  padding-inline: 7px;
+}
+
+.graphHeading > strong {
+  display: block;
+  margin: 10px 0 15px;
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.caption {
+  padding-inline: 7px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.notice > svg {
+  color: var(--accent);
+}
+
+.notice button {
+  margin-top: 18px;
+}
+
+.completion {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 35px 10px;
+  text-align: center;
+}
+
+.completeIcon {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: var(--surface-blue);
+  color: #446376;
+}
+
+.completion h2 {
+  margin-top: 12px;
+  font-size: 28px;
+}
+
+.completionActions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+@media (max-width: 1050px) {
+  .sessionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .graphCard {
+    max-width: 700px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .welcome {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .welcome h2 {
+    font-size: 24px;
+  }
+
+  .progress {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+  }
+
+  .stepCard {
+    padding: 20px;
+  }
+
+  .navigation > span {
+    flex-basis: 100%;
+    order: 1;
+    text-align: center;
+  }
+
+  .previewSteps {
+    grid-template-columns: 1fr;
+  }
+}

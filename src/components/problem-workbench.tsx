@@ -10,10 +10,11 @@ import { Prediction } from './prediction';
 import { Button } from './ui/button';
 import { ProblemInput } from './problem-input';
 import { ProblemChat } from './problem-chat';
+import { GuidedExploration } from './guided-exploration';
 import { Icon } from './icon';
 import type { ProviderInfo } from '@/lib/provider';
 
-const dedicatedSections = ['explanation', 'explore', 'chat'] as const;
+const dedicatedSections = ['explanation', 'explore', 'guided', 'chat'] as const;
 
 export function ProblemWorkbench({
   initialProblem = null,
@@ -85,6 +86,13 @@ export function ProblemWorkbench({
     setTutorPrefill({ text, revision: ++tutorPromptRevision.current });
     setDedicatedSection('chat');
   }
+  function selectSection(section: (typeof dedicatedSections)[number]) {
+    if (section === 'guided') {
+      setPredicting(false);
+      setRevealed(false);
+    }
+    setDedicatedSection(section);
+  }
   function handleSectionTabKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (
       event.key !== 'ArrowLeft' &&
@@ -103,7 +111,7 @@ export function ProblemWorkbench({
           : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + dedicatedSections.length) %
             dedicatedSections.length;
     const next = dedicatedSections[nextIndex];
-    setDedicatedSection(next);
+    selectSection(next);
     document.getElementById(`problem-tab-${next}`)?.focus();
   }
   return (
@@ -145,14 +153,14 @@ export function ProblemWorkbench({
                 <div>
                   <h3>Start with your problem</h3>
                 </div>
-                <span className="small-label">TEXT TO MODEL</span>
+                <span className="small-label">YOUR QUESTION</span>
               </div>
               <ProblemInput onPending={setBusy} provider={provider} />
             </div>
             <div className="sample-panel">
               <div className="sample-panel-heading">
                 <h3>Try an experiment</h3>
-                <span className="small-label">NO AI NEEDED</span>
+                <span className="small-label">QUICK START</span>
               </div>
               <div className="sample-grid">
                 <button disabled={busy} className="sample" onClick={() => load(samples[0])}>
@@ -300,6 +308,23 @@ export function ProblemWorkbench({
                     </span>
                   </button>
                   <button
+                    id="problem-tab-guided"
+                    className="problem-section-tab"
+                    type="button"
+                    role="tab"
+                    aria-selected={dedicatedSection === 'guided'}
+                    aria-controls="problem-panel-guided"
+                    tabIndex={dedicatedSection === 'guided' ? 0 : -1}
+                    onClick={() => selectSection('guided')}
+                    onKeyDown={handleSectionTabKeyDown}
+                  >
+                    <span className="problem-tab-number">03</span>
+                    <span className="problem-tab-copy">
+                      <strong>Guided exploration</strong>
+                      <small>Work through the steps</small>
+                    </span>
+                  </button>
+                  <button
                     id="problem-tab-chat"
                     className="problem-section-tab"
                     type="button"
@@ -310,7 +335,7 @@ export function ProblemWorkbench({
                     onClick={() => setDedicatedSection('chat')}
                     onKeyDown={handleSectionTabKeyDown}
                   >
-                    <span className="problem-tab-number">03</span>
+                    <span className="problem-tab-number">04</span>
                     <span className="problem-tab-copy">
                       <strong>Ask the tutor</strong>
                       <small>Get an answer to a question</small>
@@ -513,7 +538,7 @@ export function ProblemWorkbench({
                 )}
                 <details className="model-assumptions">
                   <summary>
-                    {dedicated && <span className="section-index">04 / MODEL NOTES</span>}
+                    {dedicated && <span className="section-index">MODEL NOTES</span>}
                     Model assumptions
                   </summary>
                   <ul>
@@ -522,17 +547,30 @@ export function ProblemWorkbench({
                     ))}
                   </ul>
                 </details>
-                {dedicated && model.type === 'linear_function' && (
-                  <section className="future-feature-section" aria-labelledby="next-tools-heading">
-                    <span className="section-index">05 / UP NEXT</span>
-                    <div>
-                      <h3 id="next-tools-heading">Step-by-step exploration</h3>
-                      <p>This space is set aside for guided steps and worked examples.</p>
-                    </div>
-                    <span className="coming-soon-label">COMING NEXT</span>
-                  </section>
-                )}
               </div>
+              {dedicated && (
+                <section
+                  id="problem-panel-guided"
+                  className="problem-tab-panel"
+                  role="tabpanel"
+                  aria-labelledby="problem-tab-guided"
+                  tabIndex={0}
+                  hidden={dedicatedSection !== 'guided'}
+                >
+                  <GuidedExploration
+                    model={model}
+                    onChange={change}
+                    onViewGraph={() => {
+                      setPredicting(false);
+                      setRevealed(false);
+                      setDedicatedSection('explore');
+                      requestAnimationFrame(() =>
+                        document.getElementById('problem-tab-explore')?.focus(),
+                      );
+                    }}
+                  />
+                </section>
+              )}
               {dedicated && (
                 <section
                   id="problem-panel-chat"

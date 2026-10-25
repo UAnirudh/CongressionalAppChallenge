@@ -17,7 +17,7 @@ A quiet science workspace with a warm paper palette, terracotta actions, practic
 
 A compact top navigation uses visible text labels on desktop and phones. The learning lab has a short introduction instead of a decorative hero. The main content has a maximum width and switches to a single column on narrow screens. The learning lab retains the original input, review, exploration, and prediction flow.
 
-Submitting a typed problem opens a dedicated browser tab. Each problem page has Explanation, Explore, and Ask the tutor sections; the original question, graph, controls, and tutor stay together. The library opens real model reviews through `/?sample=projectile` and `/?sample=linear`. The guide explains supported models, prediction tolerance, temporary state, and data handling. No navigation item is decorative.
+Submitting a typed problem opens a dedicated browser tab. Each problem page has Explanation, Explore, Guided exploration, and Ask the tutor sections; the original question, graph, controls, and tutor stay together. The exercise library has Physics and Math subject tabs, topic buttons, and 42 curated exercises across six topics. Only the selected topic’s problems appear, in three columns on desktop, two on tablets, and one on phones. Each exercise opens in its own browser tab with a graph and explanation, then progressive hints and a worked solution without a chatbot or AI request. The guide explains supported models, guided exploration, prediction tolerance, temporary state, and data handling. No navigation item is decorative.
 
 ## Interaction
 
@@ -26,6 +26,7 @@ Submitting a typed problem opens a dedicated browser tab. Each problem page has 
 - Existing temporary numeric drafts, fractional values, pending locks, and model preservation on failed interpretation are retained.
 - Graphs and controls share a panel on desktop and stack on mobile. Watermelon UI segmented tabs and semantic data-table patterns support the views; full source attribution is in THIRD_PARTY_NOTICES.md.
 - Flight playback, pause-at-coordinate checkpoints, time inspection, height and velocity views, saved comparisons, gravity presets, graph point inspection, graph zoom and data export deepen the two supported experiments.
+- Guided exploration uses the current model for four deterministic calculation steps, with numerical checking, progressive hints, worked steps, and an applied parameter change compared against the starting graph. It supports both lab models without another AI request. Progress survives section changes, resets on reload, and requires a restart if the model changes outside the walkthrough. Reviewed worked steps are distinguished from correctly checked answers.
 - The tutor answers follow-up questions using the current problem and model, and can explain an inspected projectile point. Chat history stays in the browser tab and is sent to the configured provider only when a question is submitted.
 - CSV exports use full numeric precision; on-screen values use readable rounding. All new data and inspection results are hidden during an unanswered prediction.
 - Prediction mode hides graphs and calculated results until submission. Changing a variable clears prediction feedback.
@@ -35,4 +36,4 @@ Submitting a typed problem opens a dedicated browser tab. Each problem page has 
 
 ## Boundaries
 
-The redesign adds no accounts, tracking, database, or persistence. Samples and calculations work without an AI provider. Live interpretation still requires the server's existing provider configuration. Current model state resets when leaving or reloading the lab.
+The redesign adds no accounts, tracking, database, or persistence. Curated exercises and calculations work without an AI provider. The library includes projectile motion, motion and speed, forces and energy, linear functions, quadratics, and exponential functions. AI interpretation in the learning lab still supports projectile motion and unitless linear functions and requires the server's existing provider configuration. Current model state resets when leaving or reloading the lab.
