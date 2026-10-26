@@ -30,7 +30,7 @@ const questions = [
   },
   {
     title: 'Why is my new problem tab empty?',
-    text: 'Start from the Learning Lab and choose “Interpret problem” so your question can be passed to the new tab. Allow pop-ups for this site and keep the original tab open until the problem finishes loading. Opening the problem page directly does not load a previous question.',
+    text: 'Start from the Learning Lab and choose “Interpret problem.” If your browser allows a new tab, your question opens there; if a pop-up is blocked or closed, the lab continues in the current tab. Opening the problem page directly does not load a previous question.',
   },
   {
     title: 'What if the AI cannot interpret my question?',
