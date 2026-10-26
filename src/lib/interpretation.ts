@@ -176,7 +176,13 @@ export async function interpret(
           model: config.model,
           ...(nvidia
             ? {
-                max_tokens: nvidiaNemotron ? (input.image ? 3072 : 1400) : nvidiaFastText ? 700 : 1200,
+                max_tokens: nvidiaNemotron
+                  ? input.image
+                    ? 3072
+                    : 1400
+                  : nvidiaFastText
+                    ? 700
+                    : 1200,
                 ...(nvidiaNemotron
                   ? { chat_template_kwargs: { enable_thinking: Boolean(input.image) } }
                   : { reasoning_effort: 'low' }),

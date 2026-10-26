@@ -131,8 +131,6 @@ export function ExerciseLibrary({
               key={exercise.id}
               href={`/samples/${exercise.id}`}
               className="library-exercise-card"
-              target="_blank"
-              rel="noopener noreferrer"
             >
               <div className="library-card-topline">
                 <span className="exercise-index">{String(index + 1).padStart(2, '0')}</span>

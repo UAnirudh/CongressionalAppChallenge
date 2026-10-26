@@ -1800,6 +1800,23 @@ input[type='range'] {
   font-size: 12px;
   white-space: pre-wrap;
 }
+.submitted-image-preview {
+  margin-top: 12px;
+}
+.submitted-image-preview img {
+  display: block;
+  max-width: min(100%, 640px);
+  max-height: 420px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #fff;
+}
+.submitted-image-preview figcaption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
 .explanation-heading {
   display: flex;
   align-items: baseline;

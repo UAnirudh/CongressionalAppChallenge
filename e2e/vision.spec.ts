@@ -62,6 +62,9 @@ test('Groq image interpretation requires consent and reaches editable review and
   await expect(problemTab.getByRole('heading', { name: 'Check your model' })).toBeFocused();
   await expect(problemTab.getByLabel('Slope (unitless)')).toHaveValue('3');
   await expect(problemTab.getByLabel('Intercept (unitless)')).toHaveValue('-7');
+  await expect(
+    problemTab.getByRole('img', { name: 'Uploaded problem image for review' }),
+  ).toBeVisible();
   await expect(problemTab.getByRole('tab')).toHaveCount(0);
   await problemTab.getByLabel('Slope (unitless)').fill('4');
   await problemTab.getByRole('button', { name: 'Confirm and explore' }).click();

@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <footer className="workspace-footer">
           <span>
             <Icon name="lens" />
-            Models run in your browser.
+            Calculations stay on your device. AI services are disclosed before use.
           </span>
           <Link href="/guide#your-data">
             <Icon name="lock" />

@@ -93,6 +93,35 @@ test('typed AI model opens its dedicated tab and unsupported output is honest', 
   await page.getByRole('button', { name: 'Interpret problem' }).click();
   await expect(page.getByText('Unsupported problem: Calculus is not supported.')).toBeVisible();
 });
+test('typed AI model continues in the current tab when pop-ups are blocked', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.open = () => null;
+  });
+  await page.route('**/api/interpret', (route) =>
+    route.fulfill({
+      json: {
+        status: 'supported',
+        problem: {
+          type: 'linear_function',
+          slope: 3,
+          intercept: -2,
+          xUnit: 'unitless',
+          yUnit: 'unitless',
+          assumptions: ['Unitless axes.'],
+        },
+      },
+    }),
+  );
+  await page.goto('/');
+  await page.getByLabel('Type your math or physics problem').fill('y = 3x - 2');
+  await page.getByRole('button', { name: 'Interpret problem' }).click();
+  await expect(page).toHaveURL(/\/problem\?handoff=/);
+  await expect(page.getByText('y = 3x - 2', { exact: true })).toBeVisible();
+  await page.getByRole('tab', { name: /Graph & controls/ }).click();
+  await expect(page.getByRole('heading', { name: 'Linear function', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Edit model & assumptions' }).click();
+  await expect(page.getByLabel('Slope (unitless)')).toHaveValue('3');
+});
 test('API failure and image selection are recoverable', async ({ page }) => {
   await page.route('**/api/interpret', (route) =>
     route.fulfill({

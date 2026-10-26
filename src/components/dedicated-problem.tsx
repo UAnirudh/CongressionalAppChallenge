@@ -77,6 +77,7 @@ export function DedicatedProblem({
           key={JSON.stringify(handoff.problem)}
           initialProblem={handoff.problem}
           question={handoff.question}
+          imagePreview={handoff.imagePreview}
           provider={provider}
           dedicated
           requiresReview={handoff.requiresReview}

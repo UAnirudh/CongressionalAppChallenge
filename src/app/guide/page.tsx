@@ -11,7 +11,7 @@ export const metadata = {
 const practiceSteps = [
   {
     title: 'Find your topic',
-    text: 'Choose Physics or Math, then a topic. Open a problem card to work on it in a new browser tab.',
+    text: 'Choose Physics or Math, then a topic. Open a problem card to practice in the current tab.',
   },
   {
     title: 'Connect the graph to the idea',
@@ -117,8 +117,8 @@ export default function Guide() {
                   resistance. How far does it travel before returning to its launch height?
                 </blockquote>
                 <p>
-                  Choose <strong>Interpret problem</strong>. Your problem opens in a new browser tab
-                  with its own workspace.
+                  Choose <strong>Interpret problem</strong>. Your problem opens in a dedicated
+                  workspace. If your browser blocks new tabs, it continues in the current tab.
                 </p>
               </div>
             </li>
@@ -251,7 +251,8 @@ export default function Guide() {
             <p>
               Graph calculations, sliders, and library answer checks don’t send your work to an AI
               provider. The library needs no account. Browser storage briefly passes your question
-              to its new tab; it is not a saved history.
+              and a reduced image preview to its review workspace; it is removed after the workspace
+              reads it and is not a saved history.
             </p>
           </div>
           <div>
