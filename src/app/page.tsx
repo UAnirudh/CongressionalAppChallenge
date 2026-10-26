@@ -19,7 +19,7 @@ export default async function Home({
           <p>Build a model. Change a variable. See why it works.</p>
         </div>
         <span className="lab-availability">
-          <span className="art-live-dot" />2 experiments · no account needed
+          <span className="art-live-dot" />2 interactive models · 42 guided exercises
         </span>
       </div>
       <ProblemWorkbench
