@@ -10,9 +10,12 @@ const complete = (value: unknown) =>
       choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(value) } }],
     }),
   );
-it.each(['openai/gpt-oss-20b', 'openai/gpt-oss-120b'])(
+it.each([
+  ['openai/gpt-oss-20b', 700],
+  ['openai/gpt-oss-120b', 1200],
+])(
   'uses NVIDIA request semantics for %s and validates final content only',
-  async (model) => {
+  async (model, maxTokens) => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -40,7 +43,12 @@ it.each(['openai/gpt-oss-20b', 'openai/gpt-oss-120b'])(
     ).toEqual({ status: 'supported', problem: samples[1] });
     expect(fetcher.mock.calls[0][0]).toBe('https://integrate.api.nvidia.com/v1/chat/completions');
     const sent = JSON.parse(String(fetcher.mock.calls[0][1]?.body));
-    expect(sent).toMatchObject({ model, max_tokens: 4096, reasoning_effort: 'low', stream: false });
+    expect(sent).toMatchObject({
+      model,
+      max_tokens: maxTokens,
+      reasoning_effort: 'low',
+      stream: false,
+    });
     expect(sent.messages[1]).toEqual({ role: 'user', content: 'y=2x+1' });
     expect(sent).not.toHaveProperty('store');
     expect(sent).not.toHaveProperty('max_completion_tokens');
@@ -64,9 +72,9 @@ it('sends approved images to Groq Qwen with JSON mode and only consumes the fina
   const sent = JSON.parse(String(fetcher.mock.calls[0][1]?.body));
   expect(sent).toMatchObject({
     model: 'qwen/qwen3.8-27b',
-    temperature: 0.6,
+    temperature: 0.2,
     top_p: 0.95,
-    max_completion_tokens: 4096,
+    max_completion_tokens: 1200,
     reasoning_effort: 'default',
     reasoning_format: 'hidden',
     stream: false,

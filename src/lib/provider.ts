@@ -79,7 +79,8 @@ export function interpretationProviderConfig(
 
   const requestedModel = env.NVIDIA_TEXT_MODEL?.trim();
   const model =
-    requestedModel || (nvidiaModelSupportsImages(config.model) ? 'openai/gpt-oss-20b' : config.model);
+    requestedModel ||
+    (nvidiaModelSupportsImages(config.model) ? 'openai/gpt-oss-20b' : config.model);
   if (!nvidiaTextModels.has(model) && !nvidiaModelSupportsImages(model))
     throw new Error(
       'Set NVIDIA_TEXT_MODEL to nvidia/nemotron-3.5-super-vl-120b-a12b, openai/gpt-oss-20b, or openai/gpt-oss-120b.',

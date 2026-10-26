@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { interpretationSchema } from '@/lib/models';
 import { MAX_IMAGE_BYTES, MAX_TEXT_LENGTH } from '@/lib/upload';
 import {
@@ -12,6 +13,27 @@ import { Button } from './ui/button';
 import { Icon } from './icon';
 import type { ProviderInfo } from '@/lib/provider';
 
+async function makeImagePreview(file: File) {
+  try {
+    const image = await createImageBitmap(file);
+    const scale = Math.min(1, 640 / Math.max(image.width, image.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext('2d');
+    if (!context) {
+      image.close();
+      return undefined;
+    }
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    image.close();
+    const preview = canvas.toDataURL('image/jpeg', 0.72);
+    return preview.length <= 500_000 ? preview : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function ProblemInput({
   onPending,
   provider,
@@ -19,6 +41,7 @@ export function ProblemInput({
   onPending: (pending: boolean) => void;
   provider: ProviderInfo;
 }) {
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [takingLonger, setTakingLonger] = useState(false);
   const [message, setMessage] = useState('');
@@ -54,18 +77,24 @@ export function ProblemInput({
           return;
         }
 
-        // Open the real problem page during the user gesture so the browser treats
-        // this as a new tab. The page waits for the model while the API interprets it.
+        // Open during the user gesture when possible; blocked pop-ups use this tab instead.
         const handoffId = crypto.randomUUID();
         const problemTab = window.open(
           `/problem?${problemHandoffQuery}=${encodeURIComponent(handoffId)}`,
           '_blank',
         );
-        if (!problemTab) {
-          setMessage('Allow pop-ups for this site to open a dedicated problem tab.');
-          return;
-        }
         const deliver = (handoff: ReturnType<typeof errorProblemHandoff>) => {
+          if (!problemTab || problemTab.closed) {
+            if (handoff.status !== 'ready') return true;
+            if (publishProblemHandoff(handoffId, handoff)) {
+              router.push(`/problem?${problemHandoffQuery}=${encodeURIComponent(handoffId)}`);
+              return true;
+            }
+            setMessage(
+              'Browser storage could not prepare your workspace. Try again or use a sample.',
+            );
+            return false;
+          }
           const saved = publishProblemHandoff(handoffId, handoff);
           if (!saved) {
             problemTab.close();
@@ -115,6 +144,7 @@ export function ProblemInput({
                 result.data.problem,
                 text,
                 image instanceof File && image.size > 0,
+                image instanceof File && image.size > 0 ? await makeImagePreview(image) : undefined,
               ),
             )
           )
@@ -218,8 +248,8 @@ export function ProblemInput({
         {message ||
           (pending
             ? takingLonger
-              ? 'Still reading your problem. The new tab will be ready as soon as the model finishes.'
-              : 'Reading your problem and preparing its dedicated tab…'
+              ? 'Still reading your problem. The workspace will open as soon as the model finishes.'
+              : 'Reading your problem and preparing its workspace…'
             : '')}
       </p>
     </form>

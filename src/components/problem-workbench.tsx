@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { samples, type Problem } from '@/lib/models';
 import { linearValue, projectile, projectileState } from '@/lib/math';
 import { ModelReview } from './model-review';
@@ -19,12 +20,14 @@ const dedicatedSections = ['explanation', 'explore', 'guided', 'chat'] as const;
 export function ProblemWorkbench({
   initialProblem = null,
   question,
+  imagePreview,
   provider,
   dedicated = false,
   requiresReview = false,
 }: {
   initialProblem?: Problem | null;
   question?: string;
+  imagePreview?: string;
   provider: ProviderInfo;
   dedicated?: boolean;
   requiresReview?: boolean;
@@ -58,7 +61,8 @@ export function ProblemWorkbench({
   const linearAtThree = model?.type === 'linear_function' ? linearValue(model, 3) : null;
   // Move focus only when changing views, never while adjusting a variable.
   useEffect(() => {
-    output.current?.querySelector('h2')?.focus();
+    const reviewHeading = output.current?.querySelector<HTMLElement>('#review-heading');
+    (reviewHeading ?? output.current?.querySelector<HTMLElement>('h2'))?.focus();
   }, [phase, viewRevision]);
   function load(problem: Problem) {
     setInputOpen(false);
@@ -214,15 +218,45 @@ export function ProblemWorkbench({
           </p>
         )}
         <fieldset disabled={busy}>
+          {dedicated && (draft || model) && (question || imagePreview || requiresReview) && (
+            <section className="submitted-question" aria-labelledby="submitted-question-heading">
+              <span className="section-index">YOUR QUESTION</span>
+              <h2 id="submitted-question-heading">
+                {question ? 'What you asked' : 'Your uploaded image'}
+              </h2>
+              {question && <p>{question}</p>}
+              {imagePreview ? (
+                <figure className="submitted-image-preview">
+                  <Image
+                    src={imagePreview}
+                    alt="Uploaded problem image for review"
+                    width={640}
+                    height={420}
+                    unoptimized
+                  />
+                  <figcaption>Compare the extracted values with the image you sent.</figcaption>
+                </figure>
+              ) : (
+                requiresReview && (
+                  <p className="note">
+                    This model came from an image. Check each extracted value and assumption before
+                    you explore.
+                  </p>
+                )
+              )}
+            </section>
+          )}
           {draft && !model && (
-            <ModelReview
-              key={revision}
-              problem={draft}
-              onConfirm={(problem) => {
-                setModel(problem);
-                setDraft(null);
-              }}
-            />
+            <>
+              <ModelReview
+                key={revision}
+                problem={draft}
+                onConfirm={(problem) => {
+                  setModel(problem);
+                  setDraft(null);
+                }}
+              />
+            </>
           )}
           {model && (
             <div
@@ -257,16 +291,6 @@ export function ProblemWorkbench({
                   </Button>
                 </div>
               </div>
-              {dedicated && question && (
-                <section
-                  className="submitted-question"
-                  aria-labelledby="submitted-question-heading"
-                >
-                  <span className="section-index">YOUR QUESTION</span>
-                  <h2 id="submitted-question-heading">What you asked</h2>
-                  <p>{question}</p>
-                </section>
-              )}
               {dedicated && (
                 <div className="problem-section-tabs" role="tablist" aria-label="Problem sections">
                   <button

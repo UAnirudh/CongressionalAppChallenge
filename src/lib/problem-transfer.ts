@@ -10,6 +10,11 @@ export const problemHandoffSchema = z.discriminatedUnion('status', [
     problem: problemSchema,
     question: z.string().max(4000).optional(),
     requiresReview: z.boolean().optional(),
+    imagePreview: z
+      .string()
+      .max(500_000)
+      .regex(/^data:image\/jpeg;base64,/)
+      .optional(),
   }),
   z.strictObject({ status: z.literal('error'), message: z.string().min(1).max(500) }),
 ]);
@@ -71,6 +76,7 @@ export function readyProblemHandoff(
   problem: Problem,
   question?: string,
   requiresReview = false,
+  imagePreview?: string,
 ): ProblemHandoff {
   const trimmedQuestion = question?.trim().slice(0, 4000);
   return {
@@ -78,6 +84,7 @@ export function readyProblemHandoff(
     problem,
     ...(requiresReview ? { requiresReview: true } : {}),
     ...(trimmedQuestion ? { question: trimmedQuestion } : {}),
+    ...(requiresReview && imagePreview ? { imagePreview } : {}),
   };
 }
 
