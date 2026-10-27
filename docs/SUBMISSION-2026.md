@@ -2,9 +2,9 @@
 
 Use this as a fact-checked draft, not a substitute for the team's own account. Replace bracketed prompts with true details and make sure every team member can explain the implementation.
 
-## Deadline: use the earlier cutoff
+## Deadline status (checked October 26, 2026)
 
-The official [2026 rules PDF](https://www.congressionalappchallenge.us/wp-content/uploads/2026/05/2026-CAC-Rules.pdf) states **October 26, 2026 at 12:00 p.m. EDT** (9:00 a.m. PDT). The official [student registration page](https://www.congressionalappchallenge.us/students/student-registration/) states **October 26, 2026 at 9:00 p.m. ET** (6:00 p.m. PDT). These official sources conflict. Submit before the earlier time and check the portal for its live deadline. Do not wait for a video polish pass if it could put submission at risk.
+The official [2026 rules PDF](https://www.congressionalappchallenge.us/wp-content/uploads/2026/05/2026-CAC-Rules.pdf) states **October 26, 2026 at 12:00 p.m. EDT** (9:00 a.m. PDT). The official [student registration page](https://www.congressionalappchallenge.us/students/student-registration/) states **October 26, 2026 at 9:00 p.m. ET** (6:00 p.m. PDT). These official sources conflict, and both listed cutoffs have now passed. The [submission portal](https://webportalapp.com/sp/login/congressional_app_challenge_2026) remains the place to check whether an entry can still be completed; its availability does not establish that a late entry will be accepted. If the portal rejects a submission, contact the challenge administrators promptly rather than assuming an extension.
 
 ## Facts about the app
 
@@ -46,7 +46,7 @@ Known AI assistance for this project in the current preparation:
 
 - OpenAI Codex (GPT-6 series) reviewed product behavior and assisted with code, UI, documentation, and test changes. Students should disclose this assistance and identify which changes they reviewed or adapted.
 - A local Ollama model (`qwen:latest`) provided an additional product/code critique. It did not directly edit repository files in this review.
-- The app itself has AI integrations for interpreting supported math/physics questions and tutoring. Identify the actual provider/model used in the submitted demo, and distinguish that product feature from AI used during development. The deployed app discloses provider routing in its UI. Live provider accuracy has not been confirmed in this preparation, so use the deterministic sample flow for the demo unless the team has tested the AI path with a harmless example.
+- The app itself has AI integrations for interpreting supported math/physics questions and tutoring. Identify the actual provider/model used in the submitted demo, and distinguish that product feature from AI used during development. The deployed app discloses provider routing in its UI. On October 26, 2026, production smoke checks with one synthetic projectile-motion problem confirmed typed interpretation, image interpretation, editable model review, simulation values, and a tutor explanation. This is a narrow functional check, not an accuracy guarantee; use the deterministic sample for the recording unless the team rehearses the AI flow and is comfortable with provider latency and variability.
 - Add any other AI assistants, models, image tools, coding agents, or AI-generated assets used during development. Do not claim that all code was written without AI assistance.
 
 Suggested disclosure structure (edit to be complete and truthful):
@@ -70,7 +70,7 @@ The rules require a **public 1–3 minute** YouTube or Vimeo demo. It must inclu
 ### Recording checks
 
 - Use the production site, a clean browser window, and a screen resolution that keeps controls and labels readable.
-- Record the deterministic sample flow first. AI calls depend on provider credentials, network availability, latency, and provider responses.
+- Record the deterministic sample flow first. The AI path passed a narrow live smoke check, but still depends on provider credentials, network availability, latency, and provider responses.
 - Rehearse the exact click path and reset the model before each take. Hide personal browser tabs, notifications, and account details.
 - Speak the required participant names, app name, purpose, audience, tools/languages, and AI disclosure aloud; do not rely on tiny on-screen text.
 - Upload to YouTube or Vimeo and verify the video is public and opens in a private/incognito window before pasting its URL into the application.
@@ -81,5 +81,5 @@ The rules require a **public 1–3 minute** YouTube or Vimeo demo. It must inclu
 - Finish the registration and eligibility steps for the correct participating district.
 - Complete every application response and the AI-use disclosure.
 - Paste the public video URL and test it in a signed-out browser.
-- Submit before **12:00 p.m. EDT / 9:00 a.m. PDT on October 26** unless the portal or challenge staff explicitly confirms a later cutoff.
+- Check the portal and get explicit confirmation from challenge staff before relying on any late-submission option; the published cutoffs have passed and conflict.
 - Save the submission confirmation and the exact submitted answers/video link.

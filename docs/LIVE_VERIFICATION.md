@@ -1,6 +1,13 @@
-# Live verification remaining
+# Live provider verification
 
-No live AI requests were made during initial implementation. Complete these checks after configuring server-side credentials. Use synthetic problems and images without personal information. Review provider costs before running a batch.
+No live AI requests were made during initial implementation. On October 26, 2026, the production deployment was smoke-tested with one synthetic projectile-motion problem:
+
+- Typed interpretation extracted 20 m/s, 45°, and 9.81 m/s² and produced a reviewable model.
+- Image interpretation of a generated problem image extracted the same values and assumptions and produced a reviewable model.
+- The confirmed deterministic simulation showed a 40.77 m range and 10.19 m peak height.
+- A tutor follow-up about the apex returned a consistent explanation (14.14 m/s initial vertical speed, about 1.44 s to apex, and about 10.2 m peak height).
+
+These checks confirm one happy path per AI capability, not broad accuracy, adversarial robustness, provider uptime, or rate-limit protection. Complete the remaining checks below before making broader reliability claims. Use synthetic problems and images without personal information. Review provider costs before running a batch.
 
 ## Interpretation cases
 
@@ -29,7 +36,9 @@ Use clean PNG, JPEG, and WebP screenshots of each supported exercise. Confirm th
 
 Test an invalid server key and unavailable provider with a non-production configuration. Confirm an explicit failure, no exposed key or raw provider output, and preservation of an existing edited model. Restore credentials before the final showcase. Check that empty credentials produce the documented 503 response.
 
-Deploy only after hosting request/concurrency limits and provider spending limits are configured. Smoke-test the actual deployed route, not only the landing page. Confirm the host is not logging request bodies or persisting uploaded files. Local production build success does not establish deployment success.
+The interpretation and tutor API routes currently have no application-level distributed rate limit. Repeated public requests can increase paid-provider usage. The connected Vercel account did not expose this deployment's project, so its firewall and hosting-level rate limits could not be inspected. Before broader public use, configure per-IP `POST` limits for `/api/interpret` and `/api/chat` in the owning Vercel project and verify both allowed requests and `429` responses. Do not rely on per-process memory counters for serverless rate limiting.
+
+Deploy only after hosting request/concurrency and provider spending limits are configured. Smoke-test the actual deployed route, not only the landing page. Confirm the host is not logging request bodies or persisting uploaded files. Local production build success does not establish deployment success.
 
 ## Human accessibility check
 
