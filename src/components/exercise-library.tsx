@@ -30,6 +30,7 @@ export function ExerciseLibrary({
 }) {
   const libraryId = useId();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const topicRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [activeSubject, setActiveSubject] = useState<Subject>('Physics');
   const [activeTopics, setActiveTopics] = useState<Record<Subject, string>>(() => ({
     Physics: topics.find((topic) => topic.subject === 'Physics')?.name ?? '',
@@ -94,27 +95,54 @@ export function ExerciseLibrary({
         className={`collection-panel ${currentCollection.className}`}
         aria-labelledby={`${libraryId}-${activeSubject}`}
       >
-        <div className="library-topic-picker" role="group" aria-label={`${activeSubject} topics`}>
-          {subjectTopics.map((topic) => (
-            <button
-              key={topic.name}
-              type="button"
-              aria-pressed={topic.name === currentTopic.name}
-              onClick={() =>
-                setActiveTopics((previous) => ({ ...previous, [activeSubject]: topic.name }))
-              }
-            >
-              {topic.name}
-              <span>
-                {
-                  exercises.filter(
-                    (exercise) =>
-                      exercise.subject === activeSubject && exercise.topic === topic.name,
-                  ).length
+        <div
+          className="library-topic-picker"
+          role="radiogroup"
+          aria-label={`${activeSubject} topics`}
+        >
+          {subjectTopics.map((topic, index) => {
+            const selected = topic.name === currentTopic.name;
+            return (
+              <button
+                key={topic.name}
+                ref={(button) => {
+                  topicRefs.current[index] = button;
+                }}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                tabIndex={selected ? 0 : -1}
+                onClick={() =>
+                  setActiveTopics((previous) => ({ ...previous, [activeSubject]: topic.name }))
                 }
-              </span>
-            </button>
-          ))}
+                onKeyDown={(event) => {
+                  let nextIndex: number;
+                  if (event.key === 'ArrowRight' || event.key === 'ArrowDown')
+                    nextIndex = (index + 1) % subjectTopics.length;
+                  else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp')
+                    nextIndex = (index + subjectTopics.length - 1) % subjectTopics.length;
+                  else if (event.key === 'Home') nextIndex = 0;
+                  else if (event.key === 'End') nextIndex = subjectTopics.length - 1;
+                  else return;
+                  event.preventDefault();
+                  const nextTopic = subjectTopics[nextIndex];
+                  if (!nextTopic) return;
+                  setActiveTopics((previous) => ({ ...previous, [activeSubject]: nextTopic.name }));
+                  topicRefs.current[nextIndex]?.focus();
+                }}
+              >
+                {topic.name}
+                <span>
+                  {
+                    exercises.filter(
+                      (exercise) =>
+                        exercise.subject === activeSubject && exercise.topic === topic.name,
+                    ).length
+                  }
+                </span>
+              </button>
+            );
+          })}
         </div>
         <header className="collection-panel-heading">
           <div>

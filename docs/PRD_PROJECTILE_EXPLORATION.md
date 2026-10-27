@@ -4,7 +4,7 @@
 | -------------------------------------------------------------- | ------------------------------------ |
 | Product                                                        | ConceptLens                          |
 | Feature area                                                   | Projectile motion detail page        |
-| Status                                                         | Implemented; deployment not verified |
+| Status                                                         | Implemented; production smoke-tested |
 | **Audience:** Students learning introductory projectile motion |
 
 ## Summary
@@ -120,4 +120,4 @@ Evaluate with task-based manual checks rather than analytics, since ConceptLens 
 
 ## Current implementation notes
 
-The implementation includes the A/B overlay, shared graph scale, comparison controls and summary, graph-point selection, point readout, synchronized playback timeline, and tutor prompt handoff. Deployment has not been verified. See `src/components/projectile-simulator.tsx`, `src/components/problem-workbench.tsx`, and `src/components/problem-chat.tsx` for implementation details.
+The implementation includes the A/B overlay, shared graph scale, comparison controls and summary, graph-point selection, point readout, synchronized playback timeline, and tutor prompt handoff. Production was smoke-tested on October 26, 2026 with one synthetic projectile scenario; this does not establish broad AI accuracy, provider uptime, or rate-limit protection. See `docs/LIVE_VERIFICATION.md` for evidence and remaining checks, and `src/components/projectile-simulator.tsx`, `src/components/problem-workbench.tsx`, and `src/components/problem-chat.tsx` for implementation details.

@@ -3209,13 +3209,13 @@ textarea {
   opacity: 0.75;
 }
 .library-topic-picker button:hover,
-.library-topic-picker button[aria-pressed='true'] {
+.library-topic-picker button[aria-checked='true'] {
   background: var(--surface-warm);
   color: var(--accent-dark);
   border-color: #d4a38e;
 }
 .math-collection .library-topic-picker button:hover,
-.math-collection .library-topic-picker button[aria-pressed='true'] {
+.math-collection .library-topic-picker button[aria-checked='true'] {
   background: var(--surface-blue);
   color: #496c7f;
   border-color: #b7cbd4;

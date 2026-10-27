@@ -54,7 +54,7 @@ The API bounds the incoming body while streaming and restricts text to 4,000 cha
 
 Deploy as a Node.js Next.js application (not static export). Run `npm ci` and `npm run build`, then `npm start`; or use a Next.js-compatible host. Configure the selected provider's server environment variables in the host's secret settings for both preview and production. Allow a 60-second route duration and requests slightly over 2 MB for multipart overhead. The application writes no uploaded files and requires no persistent disk or database.
 
-Before public deployment, configure the hosting provider's request/concurrency limits and an API spending limit. The endpoint has no identity-based quota because the MVP has no accounts. A public endpoint can incur provider costs. Never expose the key in client settings.
+The production site is public, but the interpretation and tutor endpoints do not have a distributed request limit yet. Before broader public use, configure hosting request/concurrency limits, provider spending limits, and per-IP API limits; see [live verification](docs/LIVE_VERIFICATION.md) for the current evidence and remaining gaps. The app has no identity-based quota because the MVP has no accounts. A public endpoint can incur provider costs. Never expose the key in client settings.
 
 ## Student ownership
 

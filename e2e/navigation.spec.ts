@@ -40,6 +40,16 @@ test('exercise library opens each editable model and navigation stays accessible
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
       .violations,
   ).toEqual([]);
+  const topicGroup = page.getByRole('radiogroup', { name: 'Physics topics' });
+  const projectileTopic = topicGroup.getByRole('radio', { name: /Projectile motion/ });
+  await expect(projectileTopic).toBeChecked();
+  await projectileTopic.press('ArrowRight');
+  const motionTopic = topicGroup.getByRole('radio', { name: /Motion & speed/ });
+  await expect(motionTopic).toBeChecked();
+  await expect(topicGroup.locator('[aria-checked="true"]')).toHaveCount(1);
+  await expect(motionTopic).toBeFocused();
+  await motionTopic.press('ArrowLeft');
+  await expect(projectileTopic).toBeChecked();
   await page.getByRole('link', { name: /How far will it travel/ }).click();
   await expect(page.getByRole('heading', { name: 'How far will it travel?' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'See the relationship' })).toBeVisible();

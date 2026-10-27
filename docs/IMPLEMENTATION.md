@@ -30,7 +30,7 @@ Commands: `npm test`, `npm run typecheck`, `npm run build`, `npm run test:e2e`.
 
 Assumptions/limitations: OpenAI model must support vision and JSON mode. No credentials supplied during development; mocked provider tests do not establish live AI accuracy. Only explicit compatible projectile units are converted by interpretation, then canonical units are validated. Unsupported dimensions, physics, ambiguous/multiple problems, and missing essential parameters must be rejected by the interpreter. Semantic classification remains probabilistic and requires user review.
 
-## Stage 4: final verification
+## Stage 4: final verification (historical snapshot, October 16, 2026)
 
 Verified locally on October 16, 2026:
 
@@ -46,7 +46,7 @@ Verified locally on October 16, 2026:
 - Screenshots were inspected on desktop and 390px mobile. Projectile text size was increased on mobile, and both physical axes use equal scales.
 - Actual production HTTP request without credentials returned 503 with `Cache-Control: no-store` and the explicit missing-configuration message.
 
-No live provider accuracy test, remote CI run, commit, push, or deployment was performed. No credentials were supplied. Automated accessibility checks are not screen-reader certification. Hosting limits and provider spending limits remain a prerequisite for a public paid endpoint.
+As of this October 16 snapshot, no live provider accuracy test, remote CI run, commit, push, or deployment had been performed, and no credentials had been supplied. Those statements describe the historical state at that date. Production smoke checks and later delivery evidence are recorded in [`docs/LIVE_VERIFICATION.md`](LIVE_VERIFICATION.md) and [`docs/SUBMISSION-2026.md`](SUBMISSION-2026.md). Automated accessibility checks are not screen-reader certification. Hosting limits and provider spending limits remain necessary for broader public use of paid endpoints.
 
 Changed stage-4 files: accessibility/browser regression tests; `.github/workflows/ci.yml`; heading focus and pending-state fixes in workbench; string drafts in linear controls; fractional projectile sliders; image decoding in server adapter; architecture, live-verification, implementation, and continuation documentation.
 

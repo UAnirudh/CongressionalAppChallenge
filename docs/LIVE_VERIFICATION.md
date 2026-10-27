@@ -36,9 +36,9 @@ Use clean PNG, JPEG, and WebP screenshots of each supported exercise. Confirm th
 
 Test an invalid server key and unavailable provider with a non-production configuration. Confirm an explicit failure, no exposed key or raw provider output, and preservation of an existing edited model. Restore credentials before the final showcase. Check that empty credentials produce the documented 503 response.
 
-The interpretation and tutor API routes currently have no application-level distributed rate limit. Repeated public requests can increase paid-provider usage. The connected Vercel account did not expose this deployment's project, so its firewall and hosting-level rate limits could not be inspected. Before broader public use, configure per-IP `POST` limits for `/api/interpret` and `/api/chat` in the owning Vercel project and verify both allowed requests and `429` responses. Do not rely on per-process memory counters for serverless rate limiting.
+The interpretation and tutor API routes currently have no application-level distributed rate limit. Repeated public requests can increase paid-provider usage. The Vercel project is now accessible, but its Firewall API reports that no firewall configuration exists, and attempts to read or initialize one return `Seawall Config not found`. No rate-limit rule is active. Initialize the project's Firewall configuration, then add and verify per-IP `POST` limits for `/api/interpret` and `/api/chat`, including allowed requests and `429` responses. Do not rely on per-process memory counters for serverless rate limiting.
 
-Deploy only after hosting request/concurrency and provider spending limits are configured. Smoke-test the actual deployed route, not only the landing page. Confirm the host is not logging request bodies or persisting uploaded files. Local production build success does not establish deployment success.
+Before treating the current public deployment as ready for broader use, configure hosting request/concurrency and provider spending limits. Smoke-test the actual deployed route, not only the landing page. Confirm the host is not logging request bodies or persisting uploaded files. Local production build success does not establish deployment success.
 
 ## Human accessibility check
 
