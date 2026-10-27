@@ -6,6 +6,9 @@ test('Groq image interpretation requires consent and reaches editable review and
   page,
 }) => {
   test.setTimeout(60000);
+  await page.addInitScript(() => {
+    window.open = () => null;
+  });
   let submissions = 0;
   await page.route('**/api/interpret', async (route) => {
     submissions++;
@@ -29,7 +32,7 @@ test('Groq image interpretation requires consent and reaches editable review and
       },
     });
   });
-  await page.goto(`http://127.0.0.1:${process.env.E2E_VISION_PORT || 3102}/`);
+  await page.goto(`http://127.0.0.1:${process.env.E2E_VISION_PORT || 3202}/`);
   await expect(page.getByText(/Typed problems are sent to NVIDIA/)).toBeVisible();
   await expect(page.getByText(/Images and accompanying text are sent to Groq/)).toBeVisible();
   const image = page.getByLabel('Or upload a problem image');
@@ -56,9 +59,9 @@ test('Groq image interpretation requires consent and reaches editable review and
   await page
     .getByLabel('Type your math or physics problem')
     .fill('Read the equation in this image.');
-  const popup = page.waitForEvent('popup');
   await page.getByRole('button', { name: 'Interpret problem' }).click();
-  const problemTab = await popup;
+  await expect(page).toHaveURL(/\/problem\?handoff=/);
+  const problemTab = page;
   await expect(problemTab.getByRole('heading', { name: 'Check your model' })).toBeFocused();
   await expect(problemTab.getByLabel('Slope (unitless)')).toHaveValue('3');
   await expect(problemTab.getByLabel('Intercept (unitless)')).toHaveValue('-7');

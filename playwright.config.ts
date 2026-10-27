@@ -1,10 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
-const port = Number(process.env.E2E_PORT || 3000);
-const nvidiaPort = Number(process.env.E2E_NVIDIA_PORT || 3101);
-const visionPort = Number(process.env.E2E_VISION_PORT || 3102);
+const port = Number(process.env.E2E_PORT || 3200);
+const nvidiaPort = Number(process.env.E2E_NVIDIA_PORT || 3201);
+const visionPort = Number(process.env.E2E_VISION_PORT || 3202);
+const reuseExistingServer = !process.env.CI && process.env.E2E_REUSE_SERVER === 'true';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  workers: Number(process.env.PW_WORKERS || (process.env.CI ? 2 : 4)),
   use: { baseURL: `http://127.0.0.1:${port}`, trace: 'retain-on-failure' },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
@@ -14,7 +16,7 @@ export default defineConfig({
     {
       command: `node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${port}`,
       url: `http://127.0.0.1:${port}`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer,
       timeout: 120000,
       env: {
         AI_PROVIDER: 'openai',
@@ -27,7 +29,7 @@ export default defineConfig({
     {
       command: `node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${nvidiaPort}`,
       url: `http://127.0.0.1:${nvidiaPort}`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer,
       timeout: 120000,
       env: {
         AI_PROVIDER: 'nvidia',
@@ -40,7 +42,7 @@ export default defineConfig({
     {
       command: `node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port ${visionPort}`,
       url: `http://127.0.0.1:${visionPort}`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer,
       timeout: 120000,
       env: {
         AI_PROVIDER: 'nvidia',
