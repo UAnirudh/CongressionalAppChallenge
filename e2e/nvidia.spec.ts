@@ -20,7 +20,7 @@ test('NVIDIA text interpretation reaches review and exploration with honest imag
       },
     }),
   );
-  await page.goto(`http://127.0.0.1:${process.env.E2E_NVIDIA_PORT || 3101}/`);
+  await page.goto(`http://127.0.0.1:${process.env.E2E_NVIDIA_PORT || 3201}/`);
   await expect(page.getByText(/Problem text is sent to NVIDIA/)).toBeVisible();
   await expect(page.getByLabel('Or upload a problem image')).toHaveCount(0);
   await expect(page.getByText(/16 megapixels/)).toHaveCount(0);
