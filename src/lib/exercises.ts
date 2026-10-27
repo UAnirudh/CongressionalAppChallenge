@@ -135,7 +135,7 @@ export const exercises: Exercise[] = [
     difficulty: 'Warm-up',
     time: '5 min',
     question:
-      'A ball leaves level ground at 20 m/s and 45°. Ignoring air resistance, how far away does it land?',
+      'A ball leaves level ground at 20 m/s and 45° above horizontal. With g = 9.81 m/s² and no air resistance, how far away does it land?',
     equation: 'range = horizontal speed × flight time',
     focus: 'Connect the launch angle to horizontal distance.',
     explanation: [
@@ -165,7 +165,7 @@ export const exercises: Exercise[] = [
     difficulty: 'Practice',
     time: '6 min',
     question:
-      'A ball is launched at 24 m/s at an angle of 30°. About how high does it rise above its launch point?',
+      'A ball launches from level ground at 24 m/s and 30° above horizontal. With g = 9.81 m/s² and no air resistance, about how high does it rise above its launch point?',
     equation: 'peak height = vertical speed² ÷ (2 × gravity)',
     focus: 'Use vertical velocity to find the top of the arc.',
     explanation: [
@@ -195,7 +195,7 @@ export const exercises: Exercise[] = [
     difficulty: 'Stretch',
     time: '7 min',
     question:
-      'A ball leaves level ground at 18 m/s and 60°. With gravity at 9.81 m/s² and no air resistance, how long until it lands?',
+      'A ball leaves level ground at 18 m/s and 60° above horizontal. With gravity at 9.81 m/s² and no air resistance, how long until it lands?',
     equation: 'flight time = 2 × vertical launch speed ÷ gravity',
     focus: 'Track the vertical motion from launch to landing.',
     explanation: [
@@ -304,7 +304,7 @@ export const exercises: Exercise[] = [
     difficulty: 'Practice',
     time: '6 min',
     question:
-      'A ball is launched at 20 m/s and 30° above level ground. How far does it travel before landing?',
+      'A ball is launched at 20 m/s and 30° above level ground. With g = 9.81 m/s² and no air resistance, how far does it travel before landing?',
     equation: 'range = v² sin(2θ) ÷ g',
     focus: 'See how launch angle changes the horizontal range.',
     explanation: [
@@ -363,7 +363,7 @@ export const exercises: Exercise[] = [
     difficulty: 'Stretch',
     time: '6 min',
     question:
-      'A ball launches at 16 m/s and 30°. How long does it take to reach the top of its path?',
+      'A ball launches at 16 m/s and 30° above horizontal. With g = 9.81 m/s², how long does it take to reach the top of its path?',
     equation: 'time to peak = vertical speed ÷ gravity',
     focus: 'Connect upward velocity to the time gravity needs to stop it.',
     explanation: [

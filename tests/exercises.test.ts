@@ -17,6 +17,10 @@ describe('curated exercises', () => {
     ['exponential-decay', 10],
     ['exponential-solve', 5],
     ['projectile-horizontal-position', 10],
+    ['projectile-range', 40.77471967380224],
+    ['projectile-height', 7.339449541284403],
+    ['projectile-angle-range', 35.311943069701876],
+    ['projectile-peak-time', 0.8154943934760448],
     ['projectile-height-at-time', 3.77375],
     ['projectile-vertical-velocity', 5.19],
     ['linear-negative-slope', -4],
@@ -36,6 +40,18 @@ describe('curated exercises', () => {
     ['exponential-decay-input', 3],
   ] as const)('%s has the correct worked answer', (id, expected) => {
     expect(exerciseById(id)?.answer).toBeCloseTo(expected, 8);
+  });
+
+  it.each([
+    'projectile-range',
+    'projectile-height',
+    'projectile-time',
+    'projectile-angle-range',
+    'projectile-peak-time',
+    'projectile-height-at-time',
+    'projectile-vertical-velocity',
+  ] as const)('%s states the gravity used in its answer', (id) => {
+    expect(exerciseById(id)?.question).toMatch(/(?:g\s*=\s*|gravity at\s*)9\.81\s*m\/s²/i);
   });
 
   it('gives every exercise a registered topic and a finite, ordered graph', () => {
