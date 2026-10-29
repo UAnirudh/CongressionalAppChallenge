@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { AppShell } from '@/components/app-shell';
+import { SITE_URL } from '@/lib/site';
 import 'katex/dist/katex.min.css';
 import './globals.css';
 const sans = localFont({
@@ -18,6 +19,7 @@ const mono = localFont({
   variable: '--font-mono',
 });
 export const metadata: Metadata = {
+  metadataBase: SITE_URL,
   title: 'ConceptLens | Explore the equation',
   description:
     'Explore projectile motion and linear functions through editable models and predictions.',

@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 const headers = { 'Cache-Control': 'no-store' };
 const maxRequestBytes = 64 * 1024;
+const routeDeadlineMs = 55_000;
 
 const chatRequestSchema = z.strictObject({
   problem: problemSchema,
@@ -168,16 +169,18 @@ async function requestTutorReply(
   originalQuestion: string,
   messages: ChatMessage[],
   config: ReturnType<typeof providerConfig>,
+  deadline: number,
   retryInstruction?: string,
 ) {
   const nvidia = config.provider === 'nvidia';
   const nemotron = nvidia && nvidiaModelSupportsImages(config.model);
-  const deadline = Date.now() + 45000;
   const url = nvidia
     ? 'https://integrate.api.nvidia.com/v1/chat/completions'
     : 'https://api.openai.com/v1/chat/completions';
   let response: Response;
   try {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new Error('deadline');
     response = await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
@@ -203,9 +206,11 @@ async function requestTutorReply(
         ],
       }),
       cache: 'no-store',
-      signal: AbortSignal.timeout(nvidia ? 45000 : 25000),
+      signal: AbortSignal.timeout(Math.min(nvidia ? 45000 : 25000, remaining)),
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && (error.name === 'TimeoutError' || error.message === 'deadline'))
+      throw new Error('The AI tutor took too long to answer. Try one focused question at a time.');
     throw new Error('The AI tutor could not be reached. Check your connection and try again.');
   }
 
@@ -285,11 +290,13 @@ export async function POST(request: Request) {
         { status: 503, headers },
       );
     }
+    const deadline = Date.now() + routeDeadlineMs;
     let answer = await requestTutorReply(
       parsed.data.problem,
       parsed.data.originalQuestion,
       parsed.data.messages,
       config,
+      deadline,
     );
     const previousMessages = parsed.data.messages.slice(0, -1);
     if (repeatsPreviousAnswer(answer, previousMessages)) {
@@ -298,6 +305,7 @@ export async function POST(request: Request) {
         parsed.data.originalQuestion,
         parsed.data.messages,
         config,
+        deadline,
         'Your draft repeated an earlier tutor response. Answer only the newest student question. Use the prior answer as context and add a genuinely new explanation, example, calculation, or correction that directly addresses the follow-up.',
       );
       if (repeatsPreviousAnswer(answer, previousMessages))
