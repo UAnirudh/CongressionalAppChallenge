@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       if (form.get('imageConsent') !== 'yes')
         throw new InterpretationError('Confirm image processing before uploading.', 400);
       image = { mime: file.type, bytes: new Uint8Array(await file.arrayBuffer()) };
-      await validateImage(image.bytes, image.mime);
+      image.bytes = await validateImage(image.bytes, image.mime);
     } else if (file !== null && !(file instanceof File))
       throw new InterpretationError('Choose a valid image file.', 400);
     if (!text.trim() && !image)

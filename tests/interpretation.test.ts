@@ -218,7 +218,7 @@ it('accepts decoded PNG, JPEG, and WebP and rejects excessive decoded dimensions
     const bytes = await sharp({ create: { width: 4, height: 4, channels: 3, background: 'white' } })
       .toFormat(format)
       .toBuffer();
-    await expect(validateImage(bytes, `image/${format}`)).resolves.toBeUndefined();
+    await expect(validateImage(bytes, `image/${format}`)).resolves.toBeInstanceOf(Uint8Array);
   }
   const huge = await sharp({
     create: { width: 4001, height: 4000, channels: 3, background: 'white' },
@@ -226,6 +226,22 @@ it('accepts decoded PNG, JPEG, and WebP and rejects excessive decoded dimensions
     .png()
     .toBuffer();
   await expect(validateImage(huge, 'image/png')).rejects.toThrow('16 megapixels');
+});
+
+it('removes embedded photo metadata before interpretation', async () => {
+  const image = await sharp({
+    create: { width: 4, height: 4, channels: 3, background: 'white' },
+  })
+    .jpeg()
+    .withExif({ IFD0: { Artist: 'private test metadata' } })
+    .toBuffer();
+  expect((await sharp(image).metadata()).exif).toBeDefined();
+
+  const clean = await validateImage(image, 'image/jpeg');
+  const metadata = await sharp(clean).metadata();
+  expect(metadata.exif).toBeUndefined();
+  expect(metadata.width).toBe(4);
+  expect(metadata.height).toBe(4);
 });
 it('bounds actual body size without trusting Content-Length', async () => {
   await expect(

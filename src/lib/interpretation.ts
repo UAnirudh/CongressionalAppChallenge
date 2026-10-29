@@ -39,8 +39,26 @@ export async function validateImage(bytes: Uint8Array, mime: string) {
     const metadata = await decoder.metadata();
     if (!metadata.width || !metadata.height || (metadata.pages ?? 1) > 1)
       throw new Error('Invalid or animated image');
-    await decoder.raw().toBuffer();
-  } catch {
+    const hasPrivateMetadata = Boolean(
+      metadata.exif || metadata.iptc || metadata.xmp || metadata.tifftagPhotoshop,
+    );
+    if (!hasPrivateMetadata) {
+      await decoder.raw().toBuffer();
+      return bytes;
+    }
+    let sanitized = sharp(bytes, { limitInputPixels: 16_000_000, failOn: 'warning' }).rotate();
+    if (mime === 'image/jpeg') sanitized = sanitized.jpeg({ quality: 90 });
+    else if (mime === 'image/png') sanitized = sanitized.png({ compressionLevel: 9 });
+    else sanitized = sanitized.webp({ quality: 90 });
+    const cleanBytes = await sanitized.toBuffer();
+    if (cleanBytes.length > MAX_IMAGE_BYTES)
+      throw new InterpretationError(
+        'Removing embedded image metadata made this file too large. Export a smaller image and try again.',
+        413,
+      );
+    return new Uint8Array(cleanBytes);
+  } catch (error) {
+    if (error instanceof InterpretationError) throw error;
     throw new InterpretationError(
       'This image is damaged, animated, or exceeds 16 megapixels. Use a smaller still image.',
       400,

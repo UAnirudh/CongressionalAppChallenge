@@ -226,7 +226,8 @@ export function ProblemInput({
             : `${provider.supportsImages ? 'Text and images are' : 'Problem text is'} sent to ${provider.name}.`}{' '}
           Provider retention policies apply. We don’t permanently store them. Remove personal
           information first.
-          {provider.supportsImages && ' Still images only, up to 16 megapixels.'}
+          {provider.supportsImages &&
+            ' Photo metadata that may contain location is stripped before sending. Still images only, up to 16 megapixels.'}
         </p>
         {hasImage && (
           <label className="consent" key={imageRevision}>
