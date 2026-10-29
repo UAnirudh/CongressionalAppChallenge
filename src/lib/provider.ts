@@ -24,11 +24,14 @@ export function selectedProvider(
 // Only this public description crosses the server/client boundary. Never pass the config.
 export function providerInfo(env: ProviderEnvironment = process.env): ProviderInfo {
   try {
-    if (env.GROQ_API_KEY?.trim() || env.GROQ_MODEL?.trim())
+    const groqKey = env.GROQ_API_KEY?.trim();
+    const groqModel = env.GROQ_MODEL?.trim();
+    const groqImageAvailable = Boolean(groqKey) && (!groqModel || groqModel === 'qwen/qwen3.8-27b');
+    if (groqKey || groqModel)
       return {
         name: selectedProvider(env) === 'nvidia' ? 'NVIDIA' : 'OpenAI',
-        supportsImages: true,
-        imageProviderName: 'Groq (Qwen 3.8)',
+        supportsImages: groqImageAvailable,
+        ...(groqImageAvailable ? { imageProviderName: 'Groq (Qwen 3.8)' } : {}),
       };
     if (selectedProvider(env) === 'nvidia')
       return { name: 'NVIDIA', supportsImages: nvidiaModelSupportsImages(env.NVIDIA_MODEL) };

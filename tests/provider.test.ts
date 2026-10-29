@@ -38,6 +38,22 @@ it('validates the vision model and never borrows another provider key', () => {
   ).toBe('openai');
 });
 
+it('advertises image interpretation only when Groq credentials and model are usable', () => {
+  expect(providerInfo({ GROQ_MODEL: 'qwen/qwen3.8-27b' })).toEqual({
+    name: 'OpenAI',
+    supportsImages: false,
+  });
+  expect(providerInfo({ GROQ_API_KEY: 'private-key', GROQ_MODEL: 'text-only-model' })).toEqual({
+    name: 'OpenAI',
+    supportsImages: false,
+  });
+  expect(providerInfo({ GROQ_API_KEY: 'private-key' })).toEqual({
+    name: 'OpenAI',
+    supportsImages: true,
+    imageProviderName: 'Groq (Qwen 3.8)',
+  });
+});
+
 it('selects NVIDIA explicitly or from its own key without borrowing OpenAI credentials', () => {
   expect(selectedProvider({ NVIDIA_API_KEY: 'private-nvidia' })).toBe('nvidia');
   expect(
