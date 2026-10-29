@@ -40,7 +40,11 @@ export async function validateImage(bytes: Uint8Array, mime: string) {
     if (!metadata.width || !metadata.height || (metadata.pages ?? 1) > 1)
       throw new Error('Invalid or animated image');
     const hasPrivateMetadata = Boolean(
-      metadata.exif || metadata.iptc || metadata.xmp || metadata.tifftagPhotoshop,
+      metadata.exif ||
+      metadata.iptc ||
+      metadata.xmp ||
+      metadata.tifftagPhotoshop ||
+      metadata.comments?.length,
     );
     if (!hasPrivateMetadata) {
       await decoder.raw().toBuffer();

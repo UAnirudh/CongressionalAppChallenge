@@ -243,6 +243,36 @@ it('removes embedded photo metadata before interpretation', async () => {
   expect(metadata.width).toBe(4);
   expect(metadata.height).toBe(4);
 });
+
+it('removes PNG text comments before interpretation', async () => {
+  const png = await sharp({
+    create: { width: 4, height: 4, channels: 3, background: 'white' },
+  })
+    .png()
+    .toBuffer();
+  const type = Buffer.from('tEXt');
+  const text = Buffer.from('Comment\0private location details', 'latin1');
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(text.length);
+  const checksumInput = Buffer.concat([type, text]);
+  let checksum = 0xffffffff;
+  for (const byte of checksumInput) {
+    checksum ^= byte;
+    for (let bit = 0; bit < 8; bit++)
+      checksum = (checksum >>> 1) ^ ((checksum & 1) === 1 ? 0xedb88320 : 0);
+  }
+  const checksumBytes = Buffer.alloc(4);
+  checksumBytes.writeUInt32BE((checksum ^ 0xffffffff) >>> 0);
+  const chunk = Buffer.concat([length, checksumInput, checksumBytes]);
+  const withComment = Buffer.concat([png.subarray(0, 33), chunk, png.subarray(33)]);
+  expect((await sharp(withComment).metadata()).comments).toEqual([
+    { keyword: 'Comment', text: 'private location details' },
+  ]);
+
+  const clean = await validateImage(withComment, 'image/png');
+  expect((await sharp(clean).metadata()).comments).toBeUndefined();
+});
+
 it('bounds actual body size without trusting Content-Length', async () => {
   await expect(
     readBoundedBody(
