@@ -181,18 +181,23 @@ it('forwards an explicitly approved decoded image to the provider without writin
     ),
   );
   vi.stubGlobal('fetch', fetcher);
-  const png = await sharp({ create: { width: 4, height: 4, channels: 3, background: 'white' } })
-    .png()
+  const jpeg = await sharp({
+    create: { width: 4, height: 4, channels: 3, background: 'white' },
+  })
+    .jpeg()
+    .withExif({ IFD0: { Artist: 'private test metadata' } })
     .toBuffer();
   const form = new FormData();
   form.set('text', 'Read this problem.');
   form.set('imageConsent', 'yes');
-  form.set('image', new File([new Uint8Array(png)], 'problem.png', { type: 'image/png' }));
+  form.set('image', new File([new Uint8Array(jpeg)], 'problem.jpg', { type: 'image/jpeg' }));
   const response = await POST(new Request('http://localhost', { method: 'POST', body: form }));
   expect(response.status).toBe(200);
   const sent = JSON.parse(fetcher.mock.calls[0][1].body);
-  expect(sent.messages[1].content[1].image_url.url).toBe(
-    `data:image/png;base64,${png.toString('base64')}`,
-  );
+  const encoded = sent.messages[1].content[1].image_url.url.split(',')[1];
+  const forwarded = Buffer.from(encoded, 'base64');
+  expect((await sharp(jpeg).metadata()).exif).toBeDefined();
+  expect((await sharp(forwarded).metadata()).exif).toBeUndefined();
+  expect((await sharp(forwarded).metadata()).width).toBe(4);
   expect(sent.store).toBe(false);
 });
