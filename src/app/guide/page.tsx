@@ -252,7 +252,8 @@ export default function Guide() {
               Graph calculations, sliders, and library answer checks don’t send your work to an AI
               provider. The library needs no account. Browser storage briefly passes your question
               and a reduced image preview to its review workspace; it is removed after the workspace
-              reads it and is not a saved history.
+              reads it, or expires after five minutes if the tab is left unopened. It is not a saved
+              history.
             </p>
           </div>
           <div>
