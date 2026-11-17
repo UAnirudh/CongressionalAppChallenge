@@ -1,5 +1,7 @@
 # ConceptLens
 
+[Try ConceptLens](https://anirudhaarin.vercel.app/) · [MIT license](LICENSE)
+
 A student-built conceptual STEM lab for the 2026 Congressional App Challenge. The AI learning lab supports **projectile motion** and **unitless linear functions**. The exercise library contains 42 guided problems across projectile motion, motion and speed, forces and energy, linear functions, quadratics, and exponential functions; these curated exercises work without AI credentials.
 
 ## Run locally
